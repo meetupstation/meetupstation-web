@@ -208,7 +208,7 @@ async function host() {
         phase = 'initializePeerConnection';
         const peerConnection = await initializePeerConnection();
 
-        pageSetProgress('creating the guest answer');
+        pageSetProgress('creating the host offer');
         phase = 'prepareHostOffer';
         await prepareHostOffer(peerConnection, sessionData);
 

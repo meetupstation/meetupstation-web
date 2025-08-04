@@ -1,0 +1,168 @@
+html {
+    /* max-width: 100%;
+    overflow-x: hidden; */
+    font-size: 32px;
+    scroll-behavior: smooth;
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    html {
+        font-size: 28px;
+    }
+}
+
+@media (max-width: 480px) {
+    html {
+        font-size: 24px;
+    }
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: inherit;
+    /* font-size: inherit; */
+}
+
+body {
+    /* max-width: 100%;
+    overflow-x: hidden; */
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+    color: #333;
+    background-color: #f9f9f9;
+}
+
+header,
+footer {
+    background-color: #222;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+}
+
+/* div.host {
+    display: flex;
+    flex-wrap: wrap;
+} */
+
+div.newRoom button {
+    opacity: 0;
+    height: 0;
+    width: 0;
+    margin: 0;
+    padding: 0;
+    display: none;
+}
+
+div.newRoom button+label {
+    filter: grayscale(1) saturate(3);
+    opacity: 1;
+}
+
+div.newRoom button:active+label {
+    filter: grayscale(1) saturate(3);
+    opacity: 0.5;
+}
+
+div.roomControlPanel input[type=text] {
+    width: 19rem;
+    /* width: 14rem; */
+    font-size: inherit;
+}
+
+div.roomControlPanel input[type=checkbox] {
+    opacity: 0;
+    height: 0;
+    width: 0;
+    margin: 0;
+    padding: 0;
+    display: none;
+}
+
+div.roomControlPanel button {
+    opacity: 0;
+    height: 0;
+    width: 0;
+    margin: 0;
+    padding: 0;
+    display: none;
+}
+
+div.roomControlPanel button+label {
+    filter: grayscale(1) saturate(3);
+    opacity: 1;
+}
+
+div.roomControlPanel button:active+label {
+    filter: grayscale(1) saturate(3);
+    opacity: 0.5;
+}
+
+div.roomControlPanel input[type=checkbox]:checked+label {
+    filter: grayscale(1) saturate(3);
+    opacity: 1;
+}
+
+div.roomControlPanel input[type=checkbox]:checked+label+label {
+    filter: grayscale(1);
+    opacity: 0.3;
+}
+
+div.roomControlPanel label {
+    filter: grayscale(1) saturate(3);
+    opacity: 0.3;
+}
+
+div.roomControlPanel label+label {
+    filter: grayscale(1);
+    opacity: 1;
+    width: 1rem;
+}
+
+/* .control select {
+    width: 8rem;
+    font-size: inherit;
+}
+
+.control input {
+    width: 19rem;
+    del-width: 14rem;
+    font-size: inherit;
+}
+
+.control .guestButton,
+.hostButton {
+    font-size: inherit;
+}
+
+.remoteArea {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.host {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.remoteGuests {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.remote label {
+    width: 19rem;
+}
+
+.remote video {
+    width: 19rem;
+    height: 12rem;
+}
+
+.localVideo {
+    width: 19rem;
+    height: 12rem;
+} */

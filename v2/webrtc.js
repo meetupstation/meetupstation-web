@@ -200,7 +200,7 @@ async function prepareGuestAnswerOrHostOffer(peerConnection, roomId, rooms) {
 
         const rd = JSON.parse(atob(hostSignalJson.description));
 
-        prepareDataChannel(peerConnection, rooms);
+        prepareDataChannel(peerConnection, roomId, rooms);
 
         await peerConnection.setRemoteDescription(rd);
 
@@ -216,7 +216,7 @@ async function prepareGuestAnswerOrHostOffer(peerConnection, roomId, rooms) {
             peerConnection.addTransceiver('video', { 'direction': 'recvonly' });
         }
 
-        prepareDataChannel(peerConnection, rooms);
+        prepareDataChannel(peerConnection, roomId, rooms);
 
         const offer = await peerConnection.createOffer();
 

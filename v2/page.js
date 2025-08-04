@@ -3,6 +3,7 @@ function newRoom(rooms) {
     rooms[`${roomId}`] = {
         peerConnections: {},
         localSessionDescription: null,
+        dataChannel: null,
         breakOnException: true
     };
 

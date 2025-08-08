@@ -4,7 +4,6 @@ const MeetingType = {
 };
 
 async function meet(roomId, rooms) {
-    let phase = '';
 
     while (true) {
         try {
@@ -12,30 +11,40 @@ async function meet(roomId, rooms) {
 
             const peerConnectionId = `${Object.keys(room.peerConnections).length}`;
 
+            pageSetProgress(roomId, 'creating the peer connection');
 
-            pageSetProgress('creating the peer connection');
-            phase = 'initializePeerConnection';
+            if (pageRoomStopping(roomId)) {
+                break;
+            }
+
             const peerConnection = await initializePeerConnection(roomId, peerConnectionId);
 
             room.peerConnections[peerConnectionId] = peerConnection;
 
-            pageSetProgress('creating the guest answer or the host offer');
-            phase = 'prepareGuestAnswerOrHostOffer';
-            const meetingType = await prepareGuestAnswerOrHostOffer(peerConnection, roomId, rooms);
+            pageSetProgress(roomId, 'creating the guest answer or the host offer');
 
-            pageSetProgress('waiting for all ice candidates');
-            phase = 'waitForLocalDescription';
-            await waitForLocalDescription(roomId, rooms);
-
-            let localSessionDescription = null;
-            if (rooms && rooms[roomId]) {
-                localSessionDescription = rooms[roomId].localSessionDescription;
-            } else {
-                return;
+            if (pageRoomStopping(roomId)) {
+                break;
             }
 
-            phase = 'signalling';
-            pageSetProgress('signalling on the room id');
+            const meetingType = await prepareGuestAnswerOrHostOffer(peerConnection, roomId, rooms);
+
+            pageSetProgress(roomId, 'collecting all ice candidates');
+
+            if (pageRoomStopping(roomId)) {
+                break;
+            }
+
+            await waitForLocalDescription(roomId, rooms);
+
+            if (pageRoomStopping(roomId)) {
+                break;
+            }
+
+            const localSessionDescription = rooms[roomId].localSessionDescription;
+
+
+            pageSetProgress(roomId, 'signalling on the room id');
 
             if (meetingType === MeetingType.HOST) {
 
@@ -48,8 +57,8 @@ async function meet(roomId, rooms) {
                     throw Error('host already exists');
                 }
 
-                if (!rooms || !rooms[roomId]) {
-                    return;
+                if (pageRoomStopping(roomId)) {
+                    break;
                 }
 
                 hostSignal = await fetch(`${window.location.origin}/api/host`, {
@@ -86,11 +95,14 @@ async function meet(roomId, rooms) {
             }
 
             if (meetingType === MeetingType.HOST) {
-                phase = 'wait for guest';
-                pageSetProgress('waiting for the guest to join...');
+                pageSetProgress(roomId, 'waiting for the guest to join...');
 
                 const hostId = pageGetRoomId(roomId);
                 while (true) {
+
+                    if (pageRoomStopping(roomId)) {
+                        break;
+                    }
                     await new Promise(resolve => setTimeout(resolve, 1000));
 
                     const guestSignal = await fetch(`${window.location.origin}/api/guest?hostId=${hostId}`, {
@@ -111,29 +123,36 @@ async function meet(roomId, rooms) {
                 }
             }
 
-            pageSetProgress('connecting...');
-            phase = 'waitForIceConnected';
+            if (pageRoomStopping(roomId)) {
+                break;
+            }
+
+            pageSetProgress(roomId, 'connecting...');
             await waitForIceConnected(roomId, rooms, peerConnection);
+
+            if (pageRoomStopping(roomId)) {
+                break;
+            }
 
             const localIpAddress = getIpAddressUtility(peerConnection.localDescription);
             const remoteIpAddress = getIpAddressUtility(peerConnection.remoteDescription);
 
-            pageSetProgress(`connected:${localIpAddress}<=>${remoteIpAddress}`);
+            pageSetProgress(roomId, `connected:${localIpAddress}<=>${remoteIpAddress}`);
 
             setUpDataChannelUtility();
 
-            phase = 'waitForIceDisonnected';
             await waitForIceDisonnected(roomId, rooms, peerConnection);
-            pageNotify('disconnected');
+            // pageNotify('disconnected');
         } catch (error) {
-            console.error(`cought - ${phase}: ${error}`);
-            pageNotify(`${phase}: ${error}`);
+            console.error(`caught: ${error}`);
 
             const room = rooms[roomId];
             if (room && !room.breakOnException) {
                 room.breakOnException = true;
                 continue;
             }
+
+            throw error;
         }
         break;
     }
@@ -227,14 +246,30 @@ async function prepareGuestAnswerOrHostOffer(peerConnection, roomId, rooms) {
 }
 
 async function waitForLocalDescription(roomId, rooms) {
-    while (!rooms[roomId] || !rooms[roomId].localSessionDescription) {
+    while (rooms[roomId] && !rooms[roomId].localSessionDescription) {
         await new Promise(resolve => setTimeout(resolve, 25));
+        if (pageRoomStopping(roomId)) {
+            break;
+        }
     }
 }
 
 async function waitForIceConnected(roomId, rooms, peerConnection) {
+    const stepWait = 50;
+    const timeOut = 30 * 1000 / stepWait;
+
+    let steps = 0;
     while (['new', 'checking', 'disconnected'].indexOf(peerConnection.iceConnectionState) !== -1) {
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise(resolve => setTimeout(resolve, stepTimeout));
+
+        ++steps;
+        if (pageRoomStopping(roomId)) {
+            return;
+        }
+
+        if (steps == timeOut) {
+            throw new Error(`roomId: ${roomId} give up connecting`);
+        }
     }
 
     if (peerConnection.iceConnectionState !== 'connected') {
@@ -244,24 +279,22 @@ async function waitForIceConnected(roomId, rooms, peerConnection) {
 }
 
 async function waitForIceDisonnected(roomId, rooms, peerConnection) {
-    let dataChannel;
-    if (!rooms[roomId] || !rooms[roomId].dataChannel ) {
-        dataChannel = null;
-    } else {
-        dataChannel = rooms[roomId].dataChannel;
-    }
-    let haveDataChannel = !!dataChannel;
+    const room = rooms[roomId];
 
+    if (!room || pageRoomStopping(roomId)) {
+        return;
+    }
+
+    let dataChannel = room.dataChannel;
     while (peerConnection.iceConnectionState === 'connected') {
-        if (!rooms[roomId] || !rooms[roomId].dataChannel ) {
-            dataChannel = null;
-        } else {
-            dataChannel = rooms[roomId].dataChannel;
+        if (!room || pageRoomStopping(roomId)) {
+            return;
         }
-        if (haveDataChannel === true && dataChannel === null) {
+
+        if (!!dataChannel === true && room.dataChannel === null) {
             pageResetDataControllers();
         }
-        haveDataChannel = !!dataChannel;
+        dataChannel = room.dataChannel;
 
         await new Promise(resolve => setTimeout(resolve, 1000));
     }
@@ -280,14 +313,18 @@ function prepareDataChannel(peerConnection, roomId, rooms) {
     });
 
     dataChannel.onopen = () => {
-        rooms[roomId].dataChannel = dataChannel;
-        dataChannel.onmessage = (message) => {
-            dataChannelHandler(message.data);
-            console.log(message.data);
+        if (rooms[roomId]) {
+            rooms[roomId].dataChannel = dataChannel;
+            dataChannel.onmessage = (message) => {
+                dataChannelHandler(message.data);
+                console.log(message.data);
+            }
         }
     };
     dataChannel.onclose = () => {
-        rooms[roomId].dataChannel = null;
+        if (rooms[roomId]) {
+            rooms[roomId].dataChannel = null;
+        }
     };
 }
 
@@ -316,6 +353,6 @@ function getIpAddressUtility(description) {
         .join(',');
 }
 
-function setUpDataChannelUtility() {}
+function setUpDataChannelUtility() { }
 
-function dataChannelHandler(message) {}
+function dataChannelHandler(message) { }

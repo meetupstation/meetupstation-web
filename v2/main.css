@@ -77,7 +77,7 @@ div.newRoom button:active+label {
 }
 
 div.roomControlPanel input[type=text] {
-    width: 9rem;
+    width: 11rem;
     font-size: inherit;
 }
 

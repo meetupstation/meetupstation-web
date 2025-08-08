@@ -260,7 +260,7 @@ async function waitForIceConnected(roomId, rooms, peerConnection) {
 
     let steps = 0;
     while (['new', 'checking', 'disconnected'].indexOf(peerConnection.iceConnectionState) !== -1) {
-        await new Promise(resolve => setTimeout(resolve, stepTimeout));
+        await new Promise(resolve => setTimeout(resolve, stepWait));
 
         ++steps;
         if (pageRoomStopping(roomId)) {

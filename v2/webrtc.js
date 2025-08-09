@@ -5,6 +5,7 @@ const MeetingType = {
 
 async function meet(roomId, rooms) {
 
+    let meetingType = null;
     while (true) {
         try {
             const room = rooms[roomId];
@@ -28,7 +29,7 @@ async function meet(roomId, rooms) {
                 break;
             }
 
-            const meetingType = await prepareGuestAnswerOrHostOffer(peerConnection, roomId, rooms);
+            meetingType = await prepareGuestAnswerOrHostOffer(peerConnection, roomId, rooms, meetingType);
 
             pageSetProgress(roomId, 'collecting all ice candidates');
 
@@ -189,7 +190,7 @@ async function initializePeerConnection(roomId, peerId) {
     return peerConnection;
 }
 
-async function prepareGuestAnswerOrHostOffer(peerConnection, roomId, rooms) {
+async function prepareGuestAnswerOrHostOffer(peerConnection, roomId, rooms, meetingTypeEnforce) {
     const media = await pageGetUserMedia(roomId);
     if (media.stream) {
         for (const track of media.stream.getTracks()) {
@@ -211,25 +212,37 @@ async function prepareGuestAnswerOrHostOffer(peerConnection, roomId, rooms) {
         }
     };
 
-    let hostAlreadyCreated = false;
     let hostSignal = null;
-    const hostId = pageGetRoomId(roomId);
 
-    if (!hostId) {
-        hostAlreadyCreated = false;
-    } else {
-        hostSignal = await fetch(`${window.location.origin}/api/host?id=${hostId}`, {
-            method: 'GET'
-        });
+    if (meetingTypeEnforce === null ||
+        meetingTypeEnforce === MeetingType.GUEST) {
 
-        if (!hostSignal.ok) {
-            hostAlreadyCreated = false;
+        const hostId = pageGetRoomId(roomId);
+        if (!hostId) {
+            if (meetingTypeEnforce === null) {
+                meetingTypeEnforce === MeetingType.HOST;
+            } else {
+                throw Error(`roomId: ${roomId}, empty hostId`);
+            }
         } else {
-            hostAlreadyCreated = true;
+            hostSignal = await fetch(`${window.location.origin}/api/host?id=${hostId}`, {
+                method: 'GET'
+            });
+
+            if (!hostSignal.ok) {
+                if (meetingTypeEnforce === null) {
+                    meetingTypeEnforce === MeetingType.HOST;
+                } else {
+                    setBreakOnException(roomId, rooms, false);
+                    throw Error(`roomId: ${roomId}, host not set up`);
+                }
+            } else {
+                meetingTypeEnforce === MeetingType.GUEST;
+            }
         }
     }
 
-    if (hostAlreadyCreated) {
+    if (meetingTypeEnforce === MeetingType.GUEST) {
         const hostSignalJson = await hostSignal.json();
 
         const rd = JSON.parse(atob(hostSignalJson.description));
@@ -242,7 +255,7 @@ async function prepareGuestAnswerOrHostOffer(peerConnection, roomId, rooms) {
         peerConnection.setLocalDescription(answerDescription);
 
         return MeetingType.GUEST;
-    } else {
+    } else/* if (meetingTypeEnforce === MeetingType.HOST)*/ {
         if (!media.audio) {
             peerConnection.addTransceiver('audio', { 'direction': 'recvonly' });
         }
@@ -283,7 +296,8 @@ async function waitForIceConnected(roomId, rooms, peerConnection) {
         }
 
         if (steps == timeOut) {
-            throw new Error(`roomId: ${roomId} give up connecting`);
+            setBreakOnException(roomId, rooms, false);
+            throw Error(`roomId: ${roomId} give up connecting`);
         }
     }
 

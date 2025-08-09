@@ -11,9 +11,9 @@ function newRoom(rooms) {
         breakOnException: true
     };
 
-    const roomControlPanelDiv = document.createElement('div');
-    roomControlPanelDiv.innerHTML = `
-    <div class='roomControlPanel' id='roomControlPanel${roomId}'>
+    const roomControlPaneDiv = document.createElement('div');
+    roomControlPaneDiv.innerHTML = `
+    <div class='roomControlPane' id='roomControlPane${roomId}'>
         <input type='text' id='roomId${roomId}'>
         <div>
             <input type='checkbox' id='roomControlToggleCamera${roomId}'>
@@ -50,12 +50,12 @@ function newRoom(rooms) {
             </label>
         </div>
     </div>`;
-    document.getElementById('roomControlList').appendChild(roomControlPanelDiv);
+    document.getElementById('roomControlList').appendChild(roomControlPaneDiv);
 }
 
 function deleteRoom(roomId, rooms) {
     delete rooms[roomId];
-    document.getElementById(`roomControlPanel${roomId}`).remove();
+    document.getElementById(`roomControlPane${roomId}`).remove();
 }
 
 async function pageRoomControlTogglePlay(roomId, rooms, self) {
@@ -104,18 +104,30 @@ function pageSetRemoteVideoStream(roomId, rooms, peerId, stream) {
         return;
     }
 
-    const remoteVideosDiv = document.getElementById('remoteVideos');
-    if (!remoteVideosDiv) {
+    const remoteVideosPaneDiv = document.getElementById('remoteVideosPane');
+    if (!remoteVideosPaneDiv) {
         return;
     }
 
-    const remoteVideoDiv = document.createElement('div');
-    remoteVideoDiv.innerHTML = `
-    <div>
-        <video id='remoteVideo_${roomId}_${peerId}' autoplay controls playsinline></video>
-    </div>`;
-    remoteVideosDiv.appendChild(remoteVideoDiv);
-    const remotePlayer = document.getElementById(`remoteVideo_${roomId}_${peerId}`);
+    let remotePlayer = document.getElementById(`remoteVideo_${roomId}_${peerId}`);
+    if (!remotePlayer) {
+        remoteVideoStatusLabel = document.createElement('label');
+        remoteVideoStatusLabel.id = 'remoteVideoStatusLabel_${roomId}_${peerId}';
+        remotePlayer = document.createElement('video');
+        remotePlayer.id = 'remoteVideo_${roomId}_${peerId}';
+        remotePlayer.setAttribute('autoplay', 'autoplay');
+        remotePlayer.setAttribute('controls', 'controls');
+        remotePlayer.setAttribute('playsinline', 'playsinline');
+
+        const remoteVideoPaneDiv = document.createElement('div')
+        
+        remoteVideoPaneDiv.appendChild(remotePlayer);
+        remoteVideoPaneDiv.appendChild(document.createElement('br'));
+        remoteVideoPaneDiv.appendChild(remoteVideoStatusLabel);
+        
+        remoteVideosPaneDiv.appendChild(remoteVideoPaneDiv);
+    }
+
     remotePlayer.srcObject = stream;
 }
 
@@ -175,16 +187,16 @@ function pageSetProgress(roomId, value) {
     }
 }
 function pageRoomStop(roomId) {
-    const roomControlPanel = document.getElementById(`roomControlPanel${roomId}`);
+    const roomControlPane = document.getElementById(`roomControlPane${roomId}`);
     if (!document.getElementById(`roomStopping${roomId}`)) {
         const roomStopping = document.createElement('label');
         roomStopping.id = `roomStopping${roomId}`;
-        roomControlPanel.appendChild(roomStopping);
+        roomControlPane.appendChild(roomStopping);
     }
 }
 
 function pageRoomStopping(roomId) {
-    if (document.getElementById(`roomStopping${roomId}`) || !document.getElementById(`roomControlPanel${roomId}`)) {
+    if (document.getElementById(`roomStopping${roomId}`) || !document.getElementById(`roomControlPane${roomId}`)) {
         return true;
     }
 

@@ -48,6 +48,17 @@ footer {
     flex-wrap: wrap;
 } */
 
+div.mainPane {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+div.roomsPane {
+    display: flex;
+    flex-direction: column;
+}
+
 div.newRoom button {
     opacity: 0;
     height: 0;
@@ -76,12 +87,12 @@ div.newRoom button:active+label {
     opacity: 0.5;
 }
 
-div.roomControlPanel input[type=text] {
+div.roomControlPane input[type=text] {
     width: 10rem;
     font-size: inherit;
 }
 
-div.roomControlPanel input[type=checkbox] {
+div.roomControlPane input[type=checkbox] {
     opacity: 0;
     height: 0;
     width: 0;
@@ -90,7 +101,7 @@ div.roomControlPanel input[type=checkbox] {
     display: none;
 }
 
-div.roomControlPanel button {
+div.roomControlPane button {
     opacity: 0;
     height: 0;
     width: 0;
@@ -99,50 +110,55 @@ div.roomControlPanel button {
     display: none;
 }
 
-div.roomControlPanel button+label {
+div.roomControlPane button+label {
     filter: grayscale(1) saturate(3);
     opacity: 1;
 }
 
-div.roomControlPanel button:active+label {
+div.roomControlPane button:active+label {
     filter: grayscale(1) saturate(3);
     opacity: 0.5;
 }
 
-div.roomControlPanel input[type=checkbox]:checked+label {
+div.roomControlPane input[type=checkbox]:checked+label {
     filter: grayscale(1) saturate(3);
     opacity: 1;
 }
 
-div.roomControlPanel input[type=checkbox]:checked+label+label {
+div.roomControlPane input[type=checkbox]:checked+label+label {
     filter: grayscale(1);
     opacity: 0.3;
 }
 
-div.roomControlPanel label {
+div.roomControlPane label {
     filter: grayscale(1) saturate(3);
     opacity: 0.3;
 }
 
-div.roomControlPanel label+label {
+div.roomControlPane label+label {
     filter: grayscale(1);
     opacity: 1;
     width: 1rem;
 }
 
-div.roomControlPanel label.roomProgress {
+div.roomControlPane label.roomProgress {
     filter: grayscale(0);
     font-size: 0.7rem;
     opacity: 0.3;
 }
 
-div.roomControlPanel label.roomError {
+div.roomControlPane label.roomError {
     filter: grayscale(0);
     font-size: 0.7rem;
     color: red;
     opacity: 0.3;
 }
 
+div.remoteVideosPane {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
 /* .control select {
     width: 8rem;
     font-size: inherit;

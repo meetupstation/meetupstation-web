@@ -77,6 +77,10 @@ div.newRoom label#nextRoomId {
     display: none;
 }
 
+div.newRoom {
+    width: 10rem;
+}
+
 div.newRoom button+label {
     filter: grayscale(1) saturate(3);
     opacity: 1;
@@ -159,6 +163,7 @@ div.remoteVideosPane {
     flex-direction: row;
     flex-wrap: wrap;
 }
+
 /* .control select {
     width: 8rem;
     font-size: inherit;

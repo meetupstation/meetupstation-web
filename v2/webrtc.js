@@ -9,7 +9,8 @@ async function meet(roomId, rooms) {
         try {
             const room = rooms[roomId];
 
-            const peerConnectionId = `${Object.keys(room.peerConnections).length}`;
+            const peerConnectionId = `${room.nextPeerConnectionId}`;
+            room.nextPeerConnectionId++;
 
             pageSetProgress(roomId, 'creating the peer connection');
 
@@ -137,12 +138,18 @@ async function meet(roomId, rooms) {
             const localIpAddress = getIpAddressUtility(peerConnection.localDescription);
             const remoteIpAddress = getIpAddressUtility(peerConnection.remoteDescription);
 
-            pageSetProgress(roomId, `connected:${localIpAddress}<=>${remoteIpAddress}`);
+            pageSetPeerConnectionStatus(roomId, peerConnectionId, `${localIpAddress}<=>${remoteIpAddress}`);
 
             setUpDataChannelUtility();
 
-            await waitForIceDisonnected(roomId, rooms, peerConnection);
-            // pageNotify('disconnected');
+            let promiseDisconnect = async () => {
+                await waitForIceDisonnected(roomId, rooms, peerConnection);
+                pageSetPeerConnectionStatus(roomId, peerConnectionId, `disconnected`);
+            }
+            if (meetingType === MeetingType.GUEST) {
+                await promiseDisconnect();
+            }
+
         } catch (error) {
             console.error(`caught: ${error}`);
 
@@ -154,7 +161,11 @@ async function meet(roomId, rooms) {
 
             throw error;
         }
-        break;
+
+        const checkBoxRepeat = document.getElementById(`roomControlToggleRepeat${roomId}`);
+        if (!checkBoxRepeat || !checkBoxRepeat.checked) {
+            break;
+        }
     }
 }
 

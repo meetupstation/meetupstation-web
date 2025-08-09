@@ -8,7 +8,8 @@ function newRoom(rooms) {
         peerConnections: {},
         localSessionDescription: null,
         dataChannel: null,
-        breakOnException: true
+        breakOnException: true,
+        nextPeerConnectionId: 0
     };
 
     const roomControlPaneDiv = document.createElement('div');
@@ -33,11 +34,11 @@ function newRoom(rooms) {
             <label for='roomControlButtonStop${roomId}'>
             ⏹️
             </label>
-            <input type='checkbox' id='roomControlTogglePause${roomId}' checked>
-            <label for='roomControlTogglePause${roomId}'>
+            <input type='checkbox' id='roomControlToggleRepeat${roomId}' checked>
+            <label for='roomControlToggleRepeat${roomId}'>
             🔁
             </label>
-            <label for='roomControlTogglePause${roomId}'>
+            <label for='roomControlToggleRepeat${roomId}'>
             🔂
             </label>
         </div>
@@ -180,12 +181,21 @@ function pageSetRoomId(roomId, id) {
 }
 
 function pageSetLocalVideoStream() { }
+
 function pageSetProgress(roomId, value) {
     const roomProgress = document.getElementById(`roomProgress${roomId}`);
     if (roomProgress) {
         roomProgress.innerText = 'ⓘ ' + value;
     }
 }
+
+function pageSetPeerConnectionStatus(roomId, peerConnectionId, value) {
+    const remoteVideoStatusLabel = document.getElementById(`remoteVideoStatusLabel_${roomId}_${peerConnectionId}`);
+    if (remoteVideoStatusLabel) {
+        remoteVideoStatusLabel.innerText = 'ⓘ ' + value;
+    }
+}
+
 function pageRoomStop(roomId) {
     const roomControlPane = document.getElementById(`roomControlPane${roomId}`);
     if (!document.getElementById(`roomStopping${roomId}`)) {

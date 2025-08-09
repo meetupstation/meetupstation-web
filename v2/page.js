@@ -112,19 +112,19 @@ function pageSetRemoteVideoStream(roomId, rooms, peerId, stream) {
     let remotePlayer = document.getElementById(`remoteVideo_${roomId}_${peerId}`);
     if (!remotePlayer) {
         remoteVideoStatusLabel = document.createElement('label');
-        remoteVideoStatusLabel.id = 'remoteVideoStatusLabel_${roomId}_${peerId}';
+        remoteVideoStatusLabel.id = `remoteVideoStatusLabel_${roomId}_${peerId}`;
         remotePlayer = document.createElement('video');
-        remotePlayer.id = 'remoteVideo_${roomId}_${peerId}';
+        remotePlayer.id = `remoteVideo_${roomId}_${peerId}`;
         remotePlayer.setAttribute('autoplay', 'autoplay');
         remotePlayer.setAttribute('controls', 'controls');
         remotePlayer.setAttribute('playsinline', 'playsinline');
 
         const remoteVideoPaneDiv = document.createElement('div')
-        
+
         remoteVideoPaneDiv.appendChild(remotePlayer);
         remoteVideoPaneDiv.appendChild(document.createElement('br'));
         remoteVideoPaneDiv.appendChild(remoteVideoStatusLabel);
-        
+
         remoteVideosPaneDiv.appendChild(remoteVideoPaneDiv);
     }
 

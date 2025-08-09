@@ -224,7 +224,7 @@ async function prepareGuestAnswerOrHostOffer(peerConnection, roomId, rooms, meet
         const hostId = pageGetRoomId(roomId);
         if (!hostId) {
             if (meetingTypeEnforce === null) {
-                meetingTypeEnforce === MeetingType.HOST;
+                meetingTypeEnforce = MeetingType.HOST;
             } else {
                 throw Error(`roomId: ${roomId}, empty hostId`);
             }
@@ -235,13 +235,13 @@ async function prepareGuestAnswerOrHostOffer(peerConnection, roomId, rooms, meet
 
             if (!hostSignal.ok) {
                 if (meetingTypeEnforce === null) {
-                    meetingTypeEnforce === MeetingType.HOST;
+                    meetingTypeEnforce = MeetingType.HOST;
                 } else {
                     setBreakOnException(roomId, rooms, false);
                     throw Error(`roomId: ${roomId}, host not set up`);
                 }
             } else {
-                meetingTypeEnforce === MeetingType.GUEST;
+                meetingTypeEnforce = MeetingType.GUEST;
             }
         }
     }

@@ -142,12 +142,14 @@ async function meet(roomId, rooms) {
 
             setUpDataChannelUtility();
 
-            let promiseDisconnect = async () => {
+            let onDisconnect = async () => {
                 await waitForIceDisonnected(roomId, rooms, peerConnection);
                 pageSetPeerConnectionStatus(roomId, peerConnectionId, `disconnected`);
             }
+            let promiseDisconnected = onDisconnect();
+
             if (meetingType === MeetingType.GUEST) {
-                await promiseDisconnect();
+                await promiseDisconnected;
             }
 
         } catch (error) {

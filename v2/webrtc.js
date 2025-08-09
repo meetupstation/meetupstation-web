@@ -131,6 +131,8 @@ async function meet(roomId, rooms) {
             pageSetProgress(roomId, 'connecting...');
             await waitForIceConnected(roomId, rooms, peerConnection);
 
+            pageSetProgress(roomId, '');
+
             if (pageRoomStopping(roomId)) {
                 break;
             }
@@ -268,7 +270,7 @@ async function waitForLocalDescription(roomId, rooms) {
 }
 
 async function waitForIceConnected(roomId, rooms, peerConnection) {
-    const stepWait = 50;
+    const stepWait = 25;
     const timeOut = 30 * 1000 / stepWait;
 
     let steps = 0;

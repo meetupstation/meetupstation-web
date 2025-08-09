@@ -80,10 +80,7 @@ async function pageRoomControlTogglePlay(roomId, rooms, self) {
                 roomStopping.remove();
             }
         } catch (error) {
-            roomErrorLabel = document.getElementById(`roomError${roomId}`);
-            if (roomErrorLabel) {
-                roomErrorLabel.innerText = error;
-            }
+            pageSetError(roomId, error);
         }
 
         self.checked = false;
@@ -186,6 +183,13 @@ function pageSetProgress(roomId, value) {
     const roomProgress = document.getElementById(`roomProgress${roomId}`);
     if (roomProgress) {
         roomProgress.innerText = 'ⓘ ' + value;
+        pageSetError(roomId, '');
+    }
+}
+function pageSetError(roomId, error) {
+    roomErrorLabel = document.getElementById(`roomError${roomId}`);
+    if (roomErrorLabel) {
+        roomErrorLabel.innerText = error;
     }
 }
 

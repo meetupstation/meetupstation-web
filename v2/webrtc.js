@@ -161,7 +161,11 @@ async function meet(roomId, rooms) {
             const room = rooms[roomId];
             if (room && !room.breakOnException) {
                 room.breakOnException = true;
-                continue;
+
+                const checkBoxRepeat = document.getElementById(`roomControlToggleRepeat${roomId}`);
+                if (checkBoxRepeat && checkBoxRepeat.checked) {
+                    continue;
+                }
             }
 
             throw error;

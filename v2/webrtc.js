@@ -43,6 +43,7 @@ async function meet(roomId, rooms) {
             }
 
             const localSessionDescription = rooms[roomId].localSessionDescription;
+            rooms[roomId].localSessionDescription = null; // set null, to be used for the next round
 
 
             pageSetProgress(roomId, 'signalling on the room id');

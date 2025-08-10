@@ -148,6 +148,7 @@ async function meet(roomId, rooms) {
             let onDisconnect = async () => {
                 await waitForIceDisonnected(roomId, rooms, peerConnection);
                 pageSetPeerConnectionStatus(roomId, peerConnectionId, `disconnected`);
+                pageRemoveRemoteVideo(roomId, peerConnectionId);
             }
             let promiseDisconnected = onDisconnect();
 
@@ -288,7 +289,7 @@ async function waitForLocalDescription(roomId, rooms) {
 
 async function waitForIceConnected(roomId, rooms, peerConnection) {
     const stepWait = 25;
-    const timeOut = 30 * 1000 / stepWait;
+    const timeOut = 60 * 1000 / stepWait;
 
     let steps = 0;
     while (['new', 'checking', 'disconnected'].indexOf(peerConnection.iceConnectionState) !== -1) {

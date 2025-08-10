@@ -73,7 +73,7 @@ async function pageRoomControlTogglePlay(roomId, rooms, self) {
                 element.setAttribute('disabled', 'disabled');
             }
             await meet(roomId, rooms);
-            pageSetProgress(roomId, 'stopped');
+            pageSetProgress(roomId, '');
 
             const roomStopping = document.getElementById(`roomStopping${roomId}`);
             if (roomStopping) {
@@ -97,6 +97,11 @@ async function pageRoomControlTogglePlay(roomId, rooms, self) {
     }
 }
 
+function pageRemoveRemoteVideo(roomId,peerId) {
+    const remoteVideoPaneDiv = document.getElementById(`remoteVideoPane_${roomId}_${peerId}`);
+    remoteVideoPaneDiv.remove();
+}
+
 function pageSetRemoteVideoStream(roomId, rooms, peerId, stream) {
     if (rooms[roomId] === undefined) {
         return;
@@ -118,6 +123,7 @@ function pageSetRemoteVideoStream(roomId, rooms, peerId, stream) {
         remotePlayer.setAttribute('playsinline', 'playsinline');
 
         const remoteVideoPaneDiv = document.createElement('div')
+        remoteVideoPaneDiv.id = `remoteVideoPane_${roomId}_${peerId}`;
 
         remoteVideoPaneDiv.appendChild(remotePlayer);
         remoteVideoPaneDiv.appendChild(document.createElement('br'));

@@ -159,6 +159,8 @@ async function meet(roomId, rooms) {
         } catch (error) {
             console.error(`caught: ${error}`);
 
+            pageRemoveRemoteVideo(roomId, peerConnectionId);
+            
             const room = rooms[roomId];
             if (room && !room.breakOnException) {
                 room.breakOnException = true;

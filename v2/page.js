@@ -99,7 +99,9 @@ async function pageRoomControlTogglePlay(roomId, rooms, self) {
 
 function pageRemoveRemoteVideo(roomId,peerId) {
     const remoteVideoPaneDiv = document.getElementById(`remoteVideoPane_${roomId}_${peerId}`);
-    remoteVideoPaneDiv.remove();
+    if (remoteVideoPaneDiv) {
+        remoteVideoPaneDiv.remove();
+    }
 }
 
 function pageSetRemoteVideoStream(roomId, rooms, peerId, stream) {

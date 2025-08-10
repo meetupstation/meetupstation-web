@@ -190,7 +190,10 @@ function pageSetLocalVideoStream() { }
 function pageSetProgress(roomId, value) {
     const roomProgress = document.getElementById(`roomProgress${roomId}`);
     if (roomProgress) {
-        roomProgress.innerText = 'ⓘ ' + value;
+        if (value) {
+            value = 'ⓘ ' + value;
+        }
+        roomProgress.innerText = value;
         pageSetError(roomId, '');
     }
 }
@@ -204,7 +207,10 @@ function pageSetError(roomId, error) {
 function pageSetPeerConnectionStatus(roomId, peerConnectionId, value) {
     const remoteVideoStatusLabel = document.getElementById(`remoteVideoStatusLabel_${roomId}_${peerConnectionId}`);
     if (remoteVideoStatusLabel) {
-        remoteVideoStatusLabel.innerText = 'ⓘ ' + value;
+        if (value) {
+            value = 'ⓘ ' + value;
+        }
+        remoteVideoStatusLabel.innerText = value;
     }
 }
 

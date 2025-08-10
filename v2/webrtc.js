@@ -7,10 +7,9 @@ async function meet(roomId, rooms) {
 
     let meetingType = null;
     while (true) {
+        const room = rooms[roomId];
+        const peerConnectionId = `${room.nextPeerConnectionId}`;
         try {
-            const room = rooms[roomId];
-
-            const peerConnectionId = `${room.nextPeerConnectionId}`;
             room.nextPeerConnectionId++;
 
             pageSetProgress(roomId, 'creating the peer connection');
@@ -149,6 +148,11 @@ async function meet(roomId, rooms) {
                 await waitForIceDisonnected(roomId, rooms, peerConnection);
                 pageSetPeerConnectionStatus(roomId, peerConnectionId, `disconnected`);
                 pageRemoveRemoteVideo(roomId, peerConnectionId);
+                const peerConnection = rooms[roomId].peerConnections[peerConnectionId];
+                if (peerConnection) {
+                    peerConnection.close();
+                    delete rooms[roomId].peerConnections[peerConnectionId];
+                }
             }
             let promiseDisconnected = onDisconnect();
 
@@ -160,7 +164,12 @@ async function meet(roomId, rooms) {
             console.error(`caught: ${error}`);
 
             pageRemoveRemoteVideo(roomId, peerConnectionId);
-            
+            const peerConnection = rooms[roomId].peerConnections[peerConnectionId];
+            if (peerConnection) {
+                peerConnection.close();
+                delete rooms[roomId].peerConnections[peerConnectionId];
+            }
+
             const room = rooms[roomId];
             if (room && !room.breakOnException) {
                 room.breakOnException = true;

@@ -97,7 +97,7 @@ async function pageRoomControlTogglePlay(roomId, rooms, self) {
     }
 }
 
-function pageRemoveRemoteVideo(roomId,peerId) {
+function pageRemoveRemoteVideo(roomId, peerId) {
     const remoteVideoPaneDiv = document.getElementById(`remoteVideoPane_${roomId}_${peerId}`);
     if (remoteVideoPaneDiv) {
         remoteVideoPaneDiv.remove();

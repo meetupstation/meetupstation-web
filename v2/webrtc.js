@@ -144,17 +144,17 @@ async function meet(roomId, rooms) {
 
             setUpDataChannelUtility();
 
-            let onDisconnect = async () => {
+            let handleDisconnect = async () => {
                 await waitForIceDisonnected(roomId, rooms, peerConnection);
                 pageSetPeerConnectionStatus(roomId, peerConnectionId, `disconnected`);
                 pageRemoveRemoteVideo(roomId, peerConnectionId);
-                const peerConnection = rooms[roomId].peerConnections[peerConnectionId];
+                
                 if (peerConnection) {
                     peerConnection.close();
                     delete rooms[roomId].peerConnections[peerConnectionId];
                 }
             }
-            let promiseDisconnected = onDisconnect();
+            let promiseDisconnected = handleDisconnect();
 
             if (meetingType === MeetingType.GUEST) {
                 await promiseDisconnected;

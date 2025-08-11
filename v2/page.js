@@ -57,8 +57,8 @@ function newRoom(rooms) {
 function deleteRoom(roomId, rooms) {
     const room = rooms[roomId];
     if (room) {
-        for (const pc of room.peerConnections) {
-            pc.close();
+        for (const [peerConnectionId, peerConnection] of Object.entries(room.peerConnections)) {
+            peerConnection.close();
         }
         delete rooms[roomId];
     }

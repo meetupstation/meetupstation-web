@@ -293,7 +293,7 @@ async function guest() {
         pageSetProgress('connecting...');
 
         phase = 'signalling';
-        const guestSignal = await fetch(`${window.location.origin}/api/guest`, {
+        const guestSignal = await fetch(`api/guest`, {
             method: 'POST',
             body: `{"hostId": "${hostId}", "guestDescription": "${sessionData.localSessionDescription}"}`,
             headers: {

@@ -50,7 +50,7 @@ async function meet(roomId, rooms) {
 
             if (meetingType === MeetingType.HOST) {
 
-                const hostSignal = await fetch(`${window.location.origin}/api/host?id=${pageGetRoomId(roomId)}`, {
+                const hostSignal = await fetch(`api/host?id=${pageGetRoomId(roomId)}`, {
                     method: 'GET'
                 });
 
@@ -74,14 +74,14 @@ async function meet(roomId, rooms) {
                         }
                         await new Promise(resolve => setTimeout(resolve, 1000));
 
-                        const guestSignal = await fetch(`${window.location.origin}/api/guest?hostId=${pageGetRoomId(roomId)}`, {
+                        const guestSignal = await fetch(`api/guest?hostId=${pageGetRoomId(roomId)}`, {
                             method: 'GET'
                         });
 
                         if (!guestSignal.ok) {
                             // maybe the host is expired
                             // will recreate
-                            const hostSignal = await fetch(`${window.location.origin}/api/host`, {
+                            const hostSignal = await fetch(`api/host`, {
                                 method: 'POST',
                                 body: `{"id": "${pageGetRoomId(roomId)}", "description": "${localSessionDescription}"}`,
                                 headers: {
@@ -108,7 +108,7 @@ async function meet(roomId, rooms) {
                 }
             } else {
 
-                const guestSignal = await fetch(`${window.location.origin}/api/guest`, {
+                const guestSignal = await fetch(`api/guest`, {
                     method: 'POST',
                     body: `{"hostId": "${pageGetRoomId(roomId)}", "guestDescription": "${localSessionDescription}"}`,
                     headers: {
@@ -241,7 +241,7 @@ async function prepareGuestAnswerOrHostOffer(peerConnection, roomId, rooms, meet
                 throw Error(`roomId: ${roomId}, empty hostId`);
             }
         } else {
-            hostSignal = await fetch(`${window.location.origin}/api/host?id=${hostId}`, {
+            hostSignal = await fetch(`api/host?id=${hostId}`, {
                 method: 'GET'
             });
 

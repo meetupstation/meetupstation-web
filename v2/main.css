@@ -6,21 +6,9 @@ html {
     box-sizing: border-box;
 }
 
-@media screen and (max-width: 1080px) and (max-aspect-ratio: 1/1) {
+@media screen and (max-width: 375px) and (max-aspect-ratio: 1/1) {
     html {
-        font-size: 36px;
-    }
-}
-
-@media (max-width: 768px) {
-    html {
-        font-size: 28px;
-    }
-}
-
-@media (max-width: 480px) {
-    html {
-        font-size: 24px;
+        font-size: 37.5px;
     }
 }
 

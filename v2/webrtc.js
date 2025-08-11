@@ -50,8 +50,7 @@ async function meet(roomId, rooms) {
 
             if (meetingType === MeetingType.HOST) {
 
-                const hostId = pageGetRoomId(roomId);
-                const hostSignal = await fetch(`${window.location.origin}/api/host?id=${hostId}`, {
+                const hostSignal = await fetch(`${window.location.origin}/api/host?id=${pageGetRoomId(roomId)}`, {
                     method: 'GET'
                 });
 
@@ -68,7 +67,6 @@ async function meet(roomId, rooms) {
                 pageSetProgress(roomId, 'waiting for the guest to join...');
 
                 {
-                    const hostId = pageGetRoomId(roomId);
                     while (true) {
 
                         if (pageRoomStopping(roomId)) {
@@ -76,7 +74,7 @@ async function meet(roomId, rooms) {
                         }
                         await new Promise(resolve => setTimeout(resolve, 1000));
 
-                        const guestSignal = await fetch(`${window.location.origin}/api/guest?hostId=${hostId}`, {
+                        const guestSignal = await fetch(`${window.location.origin}/api/guest?hostId=${pageGetRoomId(roomId)}`, {
                             method: 'GET'
                         });
 

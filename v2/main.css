@@ -84,7 +84,7 @@ div.newRoom label#nextRoomId {
 }
 
 div.newRoom {
-    width: 9rem;
+    width: 10rem;
 }
 
 div.newRoom button+label {
@@ -98,7 +98,7 @@ div.newRoom button:active+label {
 }
 
 div.roomControlPane input[type=text] {
-    width: 9rem;
+    width: 10rem;
     padding: 0rem;
     margin: 0rem;
     text-align: center;
@@ -158,16 +158,19 @@ div.roomControlPane label.roomProgress {
     filter: grayscale(0);
     font-size: 0.6rem;
     opacity: 0.3;
-    width: 9rem;
+    width: 10rem;
     display: flex;
     justify-content: center;
 }
 
 div.roomControlPane label.roomError {
     filter: grayscale(0);
-    font-size: 0.7rem;
+    font-size: 0.6rem;
     color: red;
     opacity: 0.3;
+    width: 10rem;
+    display: flex;
+    justify-content: center;
 }
 
 div.remoteVideosPane {
@@ -175,48 +178,3 @@ div.remoteVideosPane {
     flex-direction: row;
     flex-wrap: wrap;
 }
-
-/* .control select {
-    width: 8rem;
-    font-size: inherit;
-}
-
-.control input {
-    width: 19rem;
-    del-width: 14rem;
-    font-size: inherit;
-}
-
-.control .guestButton,
-.hostButton {
-    font-size: inherit;
-}
-
-.remoteArea {
-    display: flex;
-    flex-wrap: wrap;
-}
-
-.host {
-    display: flex;
-    flex-wrap: wrap;
-}
-
-.remoteGuests {
-    display: flex;
-    flex-wrap: wrap;
-}
-
-.remote label {
-    width: 19rem;
-}
-
-.remote video {
-    width: 19rem;
-    height: 12rem;
-}
-
-.localVideo {
-    width: 19rem;
-    height: 12rem;
-} */

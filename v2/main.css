@@ -100,6 +100,8 @@ div.newRoom button:active+label {
 div.roomControlPane input[type=text] {
     width: 9rem;
     padding: 0rem;
+    margin: 0rem;
+    text-align: center;
     font-size: inherit;
 }
 
@@ -123,12 +125,12 @@ div.roomControlPane button {
 
 div.roomControlPane button+label {
     filter: grayscale(1) saturate(3);
-    opacity: 1;
+    opacity: 0.5;
 }
 
 div.roomControlPane button:active+label {
     filter: grayscale(1) saturate(3);
-    opacity: 0.5;
+    opacity: 1;
 }
 
 div.roomControlPane input[type=checkbox]:checked+label {

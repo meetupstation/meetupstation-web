@@ -75,9 +75,9 @@ async function pageRoomControlTogglePlay(roomId, rooms, self) {
             await meet(roomId, rooms);
             pageSetProgress(roomId, '');
 
-            const roomStopping = document.getElementById(`roomStopping${roomId}`);
-            if (roomStopping) {
-                roomStopping.remove();
+            const roomPausing = document.getElementById(`roomPausing${roomId}`);
+            if (roomPausing) {
+                roomPausing.remove();
             }
         } catch (error) {
             pageSetError(roomId, error);
@@ -92,8 +92,8 @@ async function pageRoomControlTogglePlay(roomId, rooms, self) {
             element.removeAttribute('disabled');
         }
         self.checked = true;
-        pageRoomStop(roomId);
-        pageSetProgress(roomId, 'stopping...');
+        pageRoomPause(roomId);
+        pageSetProgress(roomId, 'pausing...');
     }
 }
 
@@ -214,17 +214,17 @@ function pageSetPeerConnectionStatus(roomId, peerConnectionId, value) {
     }
 }
 
-function pageRoomStop(roomId) {
+function pageRoomPause(roomId) {
     const roomControlPane = document.getElementById(`roomControlPane${roomId}`);
-    if (!document.getElementById(`roomStopping${roomId}`)) {
-        const roomStopping = document.createElement('label');
-        roomStopping.id = `roomStopping${roomId}`;
-        roomControlPane.appendChild(roomStopping);
+    if (!document.getElementById(`roomPausing${roomId}`)) {
+        const roomPausing = document.createElement('label');
+        roomPausing.id = `roomPausing${roomId}`;
+        roomControlPane.appendChild(roomPausing);
     }
 }
 
-function pageRoomStopping(roomId) {
-    if (document.getElementById(`roomStopping${roomId}`) || !document.getElementById(`roomControlPane${roomId}`)) {
+function pageRoomPausing(roomId) {
+    if (document.getElementById(`roomPausing${roomId}`) || !document.getElementById(`roomControlPane${roomId}`)) {
         return true;
     }
 

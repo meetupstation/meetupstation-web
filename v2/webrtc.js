@@ -14,7 +14,7 @@ async function meet(roomId, rooms) {
 
             pageSetProgress(roomId, 'creating the peer connection');
 
-            if (pageRoomStopping(roomId)) {
+            if (pageRoomPausing(roomId)) {
                 break;
             }
 
@@ -24,7 +24,7 @@ async function meet(roomId, rooms) {
 
             pageSetProgress(roomId, 'creating the guest answer or the host offer');
 
-            if (pageRoomStopping(roomId)) {
+            if (pageRoomPausing(roomId)) {
                 break;
             }
 
@@ -32,13 +32,13 @@ async function meet(roomId, rooms) {
 
             pageSetProgress(roomId, 'collecting all ice candidates');
 
-            if (pageRoomStopping(roomId)) {
+            if (pageRoomPausing(roomId)) {
                 break;
             }
 
             await waitForLocalDescription(roomId, rooms);
 
-            if (pageRoomStopping(roomId)) {
+            if (pageRoomPausing(roomId)) {
                 break;
             }
 
@@ -59,7 +59,7 @@ async function meet(roomId, rooms) {
                     throw Error('host already exists');
                 }
 
-                if (pageRoomStopping(roomId)) {
+                if (pageRoomPausing(roomId)) {
                     break;
                 }
 
@@ -69,7 +69,7 @@ async function meet(roomId, rooms) {
                 {
                     while (true) {
 
-                        if (pageRoomStopping(roomId)) {
+                        if (pageRoomPausing(roomId)) {
                             break;
                         }
                         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -124,7 +124,7 @@ async function meet(roomId, rooms) {
                 const guestSignalJson = await guestSignal.json();
             }
 
-            if (pageRoomStopping(roomId)) {
+            if (pageRoomPausing(roomId)) {
                 break;
             }
 
@@ -133,7 +133,7 @@ async function meet(roomId, rooms) {
 
             pageSetProgress(roomId, '');
 
-            if (pageRoomStopping(roomId)) {
+            if (pageRoomPausing(roomId)) {
                 break;
             }
 
@@ -292,7 +292,7 @@ async function prepareGuestAnswerOrHostOffer(peerConnection, roomId, rooms, meet
 async function waitForLocalDescription(roomId, rooms) {
     while (rooms[roomId] && !rooms[roomId].localSessionDescription) {
         await new Promise(resolve => setTimeout(resolve, 25));
-        if (pageRoomStopping(roomId)) {
+        if (pageRoomPausing(roomId)) {
             break;
         }
     }
@@ -307,7 +307,7 @@ async function waitForIceConnected(roomId, rooms, peerConnection) {
         await new Promise(resolve => setTimeout(resolve, stepWait));
 
         ++steps;
-        if (pageRoomStopping(roomId)) {
+        if (pageRoomPausing(roomId)) {
             return;
         }
 
@@ -326,13 +326,13 @@ async function waitForIceConnected(roomId, rooms, peerConnection) {
 async function waitForIceDisonnected(roomId, rooms, peerConnection) {
     const room = rooms[roomId];
 
-    if (!room || pageRoomStopping(roomId)) {
+    if (!room) {
         return;
     }
 
     let dataChannel = room.dataChannel;
     while (peerConnection.iceConnectionState === 'connected') {
-        if (!room || pageRoomStopping(roomId)) {
+        if (!room) {
             return;
         }
 

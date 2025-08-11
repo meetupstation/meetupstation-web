@@ -84,7 +84,7 @@ div.newRoom label#nextRoomId {
 }
 
 div.newRoom {
-    width: 10rem;
+    width: 9rem;
 }
 
 div.newRoom button+label {
@@ -98,7 +98,8 @@ div.newRoom button:active+label {
 }
 
 div.roomControlPane input[type=text] {
-    width: 10rem;
+    width: 9rem;
+    padding: 0rem;
     font-size: inherit;
 }
 
@@ -153,8 +154,11 @@ div.roomControlPane label+label {
 
 div.roomControlPane label.roomProgress {
     filter: grayscale(0);
-    font-size: 0.7rem;
+    font-size: 0.6rem;
     opacity: 0.3;
+    width: 9rem;
+    display: flex;
+    justify-content: center;
 }
 
 div.roomControlPane label.roomError {

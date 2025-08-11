@@ -50,7 +50,8 @@ async function meet(roomId, rooms) {
 
             if (meetingType === MeetingType.HOST) {
 
-                let hostSignal = await fetch(`${window.location.origin}/api/host?id=${pageGetRoomId(roomId)}`, {
+                const hostId = pageGetRoomId(roomId);
+                const hostSignal = await fetch(`${window.location.origin}/api/host?id=${hostId}`, {
                     method: 'GET'
                 });
 
@@ -63,21 +64,50 @@ async function meet(roomId, rooms) {
                     break;
                 }
 
-                hostSignal = await fetch(`${window.location.origin}/api/host`, {
-                    method: 'POST',
-                    body: `{"id": "${pageGetRoomId(roomId)}", "description": "${localSessionDescription}"}`,
-                    headers: {
-                        'Content-type': 'application/json; charset=UTF-8'
+                //
+                pageSetProgress(roomId, 'waiting for the guest to join...');
+
+                {
+                    const hostId = pageGetRoomId(roomId);
+                    while (true) {
+
+                        if (pageRoomStopping(roomId)) {
+                            break;
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+
+                        const guestSignal = await fetch(`${window.location.origin}/api/guest?hostId=${hostId}`, {
+                            method: 'GET'
+                        });
+
+                        if (!guestSignal.ok) {
+                            // maybe the host is expired
+                            // will recreate
+                            const hostSignal = await fetch(`${window.location.origin}/api/host`, {
+                                method: 'POST',
+                                body: `{"id": "${pageGetRoomId(roomId)}", "description": "${localSessionDescription}"}`,
+                                headers: {
+                                    'Content-type': 'application/json; charset=UTF-8'
+                                }
+                            });
+
+                            if (!hostSignal.ok) {
+                                setBreakOnException(roomId, rooms, false);
+                                throw Error('cannot establish the host id');
+                            }
+
+                            const hostSignalJson = await hostSignal.json();
+                            pageSetRoomId(roomId, hostSignalJson.id);
+                        } else {
+                            const guestSignalJson = await guestSignal.json();
+                            if (guestSignalJson.guestDescription) {
+                                await peerConnection.setRemoteDescription(JSON.parse(atob(guestSignalJson.guestDescription)));
+
+                                break;
+                            }
+                        }
                     }
-                });
-
-                if (!hostSignal.ok) {
-                    setBreakOnException(roomId, rooms, false);
-                    throw Error('cannot establish the host id');
                 }
-
-                const hostSignalJson = await hostSignal.json();
-                pageSetRoomId(roomId, hostSignalJson.id);
             } else {
 
                 const guestSignal = await fetch(`${window.location.origin}/api/guest`, {
@@ -94,35 +124,6 @@ async function meet(roomId, rooms) {
                 }
 
                 const guestSignalJson = await guestSignal.json();
-            }
-
-            if (meetingType === MeetingType.HOST) {
-                pageSetProgress(roomId, 'waiting for the guest to join...');
-
-                const hostId = pageGetRoomId(roomId);
-                while (true) {
-
-                    if (pageRoomStopping(roomId)) {
-                        break;
-                    }
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-
-                    const guestSignal = await fetch(`${window.location.origin}/api/guest?hostId=${hostId}`, {
-                        method: 'GET'
-                    });
-
-                    if (!guestSignal.ok) {
-                        setBreakOnException(roomId, rooms, false);
-                        throw Error('guest not available');
-                    }
-
-                    const guestSignalJson = await guestSignal.json();
-                    if (guestSignalJson.guestDescription) {
-                        await peerConnection.setRemoteDescription(JSON.parse(atob(guestSignalJson.guestDescription)));
-
-                        break;
-                    }
-                }
             }
 
             if (pageRoomStopping(roomId)) {
@@ -149,7 +150,7 @@ async function meet(roomId, rooms) {
                 await waitForIceDisonnected(roomId, rooms, peerConnection);
                 pageSetPeerConnectionStatus(roomId, peerConnectionId, `disconnected`);
                 pageRemoveRemoteVideo(roomId, peerConnectionId);
-                
+
                 if (peerConnection) {
                     peerConnection.close();
                     delete rooms[roomId].peerConnections[peerConnectionId];

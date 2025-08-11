@@ -55,7 +55,13 @@ function newRoom(rooms) {
 }
 
 function deleteRoom(roomId, rooms) {
-    delete rooms[roomId];
+    const room = rooms[roomId];
+    if (room) {
+        for (const pc of room.peerConnections) {
+            pc.close();
+        }
+        delete rooms[roomId];
+    }
     document.getElementById(`roomControlPane${roomId}`).remove();
 }
 
@@ -126,6 +132,7 @@ function pageSetRemoteVideoStream(roomId, rooms, peerId, stream) {
 
         const remoteVideoPaneDiv = document.createElement('div')
         remoteVideoPaneDiv.id = `remoteVideoPane_${roomId}_${peerId}`;
+        remoteVideoPaneDiv.class = 'remoteVideoPane';
 
         remoteVideoPaneDiv.appendChild(remotePlayer);
         remoteVideoPaneDiv.appendChild(document.createElement('br'));

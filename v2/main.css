@@ -178,3 +178,12 @@ div.remoteVideosPane {
     flex-direction: row;
     flex-wrap: wrap;
 }
+
+div.remoteVideoPane label {
+    filter: grayscale(0);
+    font-size: 0.6rem;
+    opacity: 0.3;
+    width: 10rem;
+    display: flex;
+    justify-content: center;
+}

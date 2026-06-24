@@ -204,6 +204,7 @@ function pageSetProgress(roomId, value) {
         pageSetError(roomId, '');
     }
 }
+
 function pageSetError(roomId, error) {
     roomErrorLabel = document.getElementById(`roomError${roomId}`);
     if (roomErrorLabel) {

@@ -75,22 +75,23 @@ export function deleteRoom(
     document.getElementById(`roomControlPane${roomId}`)?.remove();
 }
 
-export async function pageRoomControlTogglePlay(
+export async function roomTogglePlay(
     roomId: number,
     rooms: Map<string, webrtcElements.Room>,
     self: HTMLInputElement) {
     const elements = [
-        document.getElementById(`roomId${roomId}`)!,
-        document.getElementById(`roomControlToggleCamera${roomId}`)!,
-        document.getElementById(`roomControlToggleMicrophone${roomId}`)!
+        document.querySelector<HTMLInputElement>(`#roomId${roomId}`)!,
+        document.querySelector<HTMLInputElement>(`#roomControlToggleCamera${roomId}`)!,
+        document.querySelector<HTMLInputElement>(`#roomControlToggleMicrophone${roomId}`)!
     ];
     pageElements.roomSetProgress(roomId, '');
 
     if (self.checked) {
         try {
             for (const element of elements) {
-                element.setAttribute('disabled', 'disabled');
+                element.disabled = true;
             }
+
             await webrtc.meet(roomId, rooms);
             pageElements.roomSetProgress(roomId, '');
 
@@ -104,15 +105,16 @@ export async function pageRoomControlTogglePlay(
 
         self.checked = false;
         for (const element of elements) {
-            element.removeAttribute('disabled');
+            element.disabled = false;
         }
     } else {
         for (const element of elements) {
-            element.removeAttribute('disabled');
+            element.disabled = false;
         }
         self.checked = true;
+
         pageElements.roomPause(roomId);
-        pageElements.roomSetProgress(roomId, 'pausing...');
+        pageElements.roomSetProgress(roomId, 'paused');
     }
 }
 
@@ -129,6 +131,6 @@ document.addEventListener('click', e => {
         deleteRoom(roomId, rooms);
     } else if (toggleButton instanceof HTMLInputElement) {
         const roomId = Number(toggleButton.getAttribute('toggle-room-id'));
-        pageRoomControlTogglePlay(roomId, rooms, toggleButton);
+        roomTogglePlay(roomId, rooms, toggleButton);
     }
 });

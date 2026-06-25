@@ -4,7 +4,7 @@ import * as pageElements from './pageElements.js';
 
 const rooms: Map<string, webrtcElements.Room> = new Map();
 
-export function newRoom(): void {
+export function newRoom(rooms: Map<string, webrtcElements.Room>): void {
     const nextRoomIdLabel = document.getElementById('nextRoomId');
 
     const roomId = parseInt(nextRoomIdLabel!.innerText);
@@ -32,7 +32,7 @@ export function newRoom(): void {
             <label for='roomControlTogglePlay${roomId}'>
             ▶️
             </label>
-            <button id='roomControlButtonStop${roomId}' onclick='deleteRoom(${roomId}, rooms)'>.
+            <button id='roomControlButtonStop${roomId}' data-room-id='${roomId}'>.
             </button>
             <label for='roomControlButtonStop${roomId}'>
             ⏹️
@@ -116,4 +116,17 @@ export async function pageRoomControlTogglePlay(
     }
 }
 
-document.getElementById("newRoom")!.addEventListener("click", newRoom);
+document.getElementById("newRoom")!.addEventListener("click", () => {
+    newRoom(rooms);
+});
+
+document.addEventListener("click", e => {
+    const button = (e.target as HTMLElement).closest("[data-room-id]");
+
+    if (!button) {
+        return;
+    }
+
+    const roomId = Number(button.getAttribute("data-room-id"));
+    deleteRoom(roomId, rooms);
+});

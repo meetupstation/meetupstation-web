@@ -113,8 +113,8 @@ export async function roomTogglePlay(
         }
         self.checked = true;
 
-        pageElements.roomPause(roomId);
         pageElements.roomSetProgress(roomId, 'paused');
+        pageElements.roomPause(roomId);
     }
 }
 

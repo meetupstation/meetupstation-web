@@ -12,7 +12,7 @@ export class UserMedia {
     video: boolean = false;
 };
 
-export function roomRemoveRemoteVideo(roomId: number, peerId: string) {
+export function roomRemoveRemoteVideo(roomId: number, peerId: string): void {
     const remoteVideoPaneDiv = document.getElementById(
         `remoteVideoPane_${roomId}_${peerId}`
     );
@@ -21,7 +21,7 @@ export function roomRemoveRemoteVideo(roomId: number, peerId: string) {
     }
 }
 
-export function roomPause(roomId: number) {
+export function roomPause(roomId: number): void {
     const roomControlPane = document.getElementById(`roomControlPane${roomId}`)!;
     if (!document.getElementById(`roomPausing${roomId}`)) {
         const roomPausing = document.createElement('label');

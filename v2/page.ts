@@ -1,6 +1,6 @@
-import * as webrtcElements from './webrtcElements';
-import * as webrtc from './webrtc';
-import * as pageElements from './pageElements';
+import * as webrtcElements from './webrtcElements.js';
+import * as webrtc from './webrtc.js';
+import * as pageElements from './pageElements.js';
 
 export function newRoom(rooms: Map<string, webrtcElements.Room>): void {
     const nextRoomIdLabel = document.getElementById('nextRoomId');

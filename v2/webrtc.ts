@@ -1,5 +1,5 @@
-import * as pageElements from './pageElements';
-import * as webrtcElements from './webrtcElements';
+import * as pageElements from './pageElements.js';
+import * as webrtcElements from './webrtcElements.js';
 
 class ControlledError extends Error {
     constructor(message: string) {
@@ -149,7 +149,7 @@ export async function meet(
                     throw new ControlledError('while trying to find the host');
                 }
 
-                //const _guestSignalJson = 
+                //const _guestSignalJson =
                 await guestSignal.json();
             }
 

@@ -93,12 +93,13 @@ export async function roomTogglePlay(
             }
 
             await webrtc.meet(roomId, rooms);
-            pageElements.roomSetProgress(roomId, '');
 
             const roomPausing = document.getElementById(`roomPausing${roomId}`);
             if (roomPausing) {
                 roomPausing.remove();
             }
+            
+            pageElements.roomSetProgress(roomId, '');
         } catch (error) {
             pageElements.roomSetError(roomId, `${error}`);
         }

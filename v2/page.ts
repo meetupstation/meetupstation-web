@@ -28,11 +28,11 @@ export function newRoom(rooms: Map<string, webrtcElements.Room>): void {
             <label for='roomControlToggleMicrophone${roomId}'>
             ⏺️
             </label>
-            <input type='checkbox' id='roomControlTogglePlay${roomId}' onclick='pageRoomControlTogglePlay(${roomId}, rooms, this);'>
+            <input type='checkbox' id='roomControlTogglePlay${roomId}' toggle-room-id='${roomId}'>
             <label for='roomControlTogglePlay${roomId}'>
             ▶️
             </label>
-            <button id='roomControlButtonStop${roomId}' data-room-id='${roomId}'>.
+            <button id='roomControlButtonStop${roomId}' delete-room-id='${roomId}'>.
             </button>
             <label for='roomControlButtonStop${roomId}'>
             ⏹️
@@ -116,17 +116,19 @@ export async function pageRoomControlTogglePlay(
     }
 }
 
-document.getElementById("newRoom")!.addEventListener("click", () => {
+document.getElementById('newRoom')!.addEventListener('click', () => {
     newRoom(rooms);
 });
 
-document.addEventListener("click", e => {
-    const button = (e.target as HTMLElement).closest("[data-room-id]");
+document.addEventListener('click', e => {
+    const deleteButton = (e.target as HTMLElement).closest('[delete-room-id]');
+    const toggleButton = (e.target as HTMLElement).closest('[toggle-room-id]');
 
-    if (!button) {
-        return;
+    if (deleteButton) {
+        const roomId = Number(deleteButton.getAttribute('delete-room-id'));
+        deleteRoom(roomId, rooms);
+    } else if (toggleButton instanceof HTMLInputElement) {
+        const roomId = Number(toggleButton.getAttribute('toggle-room-id'));
+        pageRoomControlTogglePlay(roomId, rooms, toggleButton);
     }
-
-    const roomId = Number(button.getAttribute("data-room-id"));
-    deleteRoom(roomId, rooms);
 });

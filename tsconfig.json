@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
     "lib": ["ES2023", "DOM"],
     "noUnusedLocals": true,
     "noUnusedParameters": true,

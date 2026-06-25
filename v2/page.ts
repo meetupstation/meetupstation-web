@@ -2,7 +2,9 @@ import * as webrtcElements from './webrtcElements.js';
 import * as webrtc from './webrtc.js';
 import * as pageElements from './pageElements.js';
 
-export function newRoom(rooms: Map<string, webrtcElements.Room>): void {
+const rooms: Map<string, webrtcElements.Room> = new Map();
+
+export function newRoom(): void {
     const nextRoomIdLabel = document.getElementById('nextRoomId');
 
     const roomId = parseInt(nextRoomIdLabel!.innerText);
@@ -113,3 +115,5 @@ export async function pageRoomControlTogglePlay(
         pageElements.roomSetProgress(roomId, 'pausing...');
     }
 }
+
+document.getElementById("newRoom")!.addEventListener("click", newRoom);

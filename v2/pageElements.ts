@@ -63,7 +63,6 @@ function roomClearError(roomId: number) {
 }
 
 export function roomSetError(roomId: number, error: string): void {
-    assertRoomActive(roomId);
 
     const roomErrorLabel = document.getElementById(`roomError${roomId}`);
     if (roomErrorLabel) {

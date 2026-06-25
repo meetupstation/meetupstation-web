@@ -1,4 +1,10 @@
-import * as webrtcElements from './webrtcElements';
+export class RoomClosed {
+    roomId: number;
+
+    constructor(roomId: number) {
+        this.roomId = roomId;
+    }
+}
 
 export class UserMedia {
     stream: MediaStream|null = null;
@@ -15,13 +21,20 @@ export function roomRemoveRemoteVideo(roomId: number, peerId: string) {
     }
 }
 
-export function roomPausing(roomId: number): boolean {
+export function roomPause(roomId: number) {
+    const roomControlPane = document.getElementById(`roomControlPane${roomId}`)!;
+    if (!document.getElementById(`roomPausing${roomId}`)) {
+        const roomPausing = document.createElement('label');
+        roomPausing.id = `roomPausing${roomId}`;
+        roomControlPane.appendChild(roomPausing);
+    }
+}
+
+export function assertRoomActive(roomId: number): void {
     if (document.getElementById(`roomPausing${roomId}`) ||
         !document.getElementById(`roomControlPane${roomId}`)) {
-        return true;
+        throw new RoomClosed(roomId);
     }
-
-    return false;
 }
 
 export function roomRepeatChecked(roomId: number): boolean {
@@ -33,6 +46,8 @@ export function roomRepeatChecked(roomId: number): boolean {
 }
 
 export function roomSetProgress(roomId: number, value: string): void {
+    assertRoomActive(roomId);
+
     const roomProgress = document.getElementById(`roomProgress${roomId}`);
     if (roomProgress) {
         if (value) {
@@ -47,7 +62,9 @@ function roomClearError(roomId: number) {
     roomSetError(roomId, '');
 }
 
-function roomSetError(roomId: number, error: string): void {
+export function roomSetError(roomId: number, error: string): void {
+    assertRoomActive(roomId);
+
     const roomErrorLabel = document.getElementById(`roomError${roomId}`);
     if (roomErrorLabel) {
         roomErrorLabel.innerText = error;
@@ -71,21 +88,15 @@ export function roomSetPeerConnectionStatus(
 
 export function roomSetLocalVideoStream(
     _roomId: number,
-    _rooms: [webrtcElements.Room],
     _stream: MediaStream
 ): void {
 }
 
 export function roomSetRemoteVideoStream(
     roomId: number,
-    rooms: [webrtcElements.Room],
     peerId: string,
     stream: MediaStream
 ): void {
-
-    if (rooms[roomId] === undefined) {
-        return;
-    }
 
     const remoteVideosPaneDiv = document.getElementById('remoteVideosPane');
     if (!remoteVideosPaneDiv) {
@@ -122,11 +133,11 @@ export function roomSetRemoteVideoStream(
     remotePlayer.srcObject = stream;
 }
 
-export function getRoomId(roomId: number): string {
+export function getRoomIdentifier(roomId: number): string {
     return document.querySelector<HTMLInputElement>(`#roomId${roomId}`)!.value;
 }
 
-export function setRoomId(roomId: number, id: string): void {
+export function setRoomIdentifier(roomId: number, id: string): void {
     document.querySelector<HTMLInputElement>(`#roomId${roomId}`)!.value = id;
 }
 

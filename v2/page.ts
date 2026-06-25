@@ -110,7 +110,7 @@ export async function roomTogglePlay(
         }
     } else {
         pageElements.roomSetProgress(roomId, 'paused');
-        
+
         for (const element of elements) {
             element.disabled = false;
         }

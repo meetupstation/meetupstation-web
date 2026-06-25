@@ -14,12 +14,17 @@ export async function meet(
     let meetingType: webrtcElements.MeetingType|null = null;
 
     do {
-        const roomMaybeUndefined = rooms.get(`${roomId}`);
-        if (!roomMaybeUndefined) {
-            throw new Error('undefined room object');
-        }
 
-        const room = roomMaybeUndefined!;
+        const room = (
+            (rooms: Map<string, webrtcElements.Room>)
+                : webrtcElements.Room => {
+                const room = rooms.get(`${roomId}`);
+                if (!room) {
+                    throw new Error('undefined room object');
+                }
+                return room;
+            }
+        )(rooms);
 
         const peerConnectionId = `${room.nextPeerConnectionId}`;
         try {
@@ -245,6 +250,7 @@ async function prepareGuestAnswerOrHostOffer(
     room: webrtcElements.Room,
     meetingTypeInsist: webrtcElements.MeetingType|null
 ): Promise<webrtcElements.MeetingType> {
+
     const media = await pageElements.getUserMedia(room.id);
     if (media.stream) {
         for (const track of media.stream.getTracks()) {
@@ -267,37 +273,46 @@ async function prepareGuestAnswerOrHostOffer(
         }
     };
 
-    let hostSignal: Response|null = null;
-
-    if (meetingTypeInsist === null ||
-        meetingTypeInsist === webrtcElements.MeetingType.GUEST) {
-
-        const hostId = pageElements.getRoomIdentifier(room.id);
-        if (!hostId) {
+    const meetingType = await (
+        async (meetingTypeInsist: webrtcElements.MeetingType|null)
+            : Promise<webrtcElements.MeetingType> => {
             if (meetingTypeInsist === null) {
-                meetingTypeInsist = webrtcElements.MeetingType.HOST;
-            } else {
-                throw new Error(`roomId: ${room.id}, empty hostId`);
-            }
-        } else {
-            hostSignal = await fetch(`api/host?id=${hostId}`, {
-                method: 'GET'
-            });
-
-            if (!hostSignal.ok) {
-                if (meetingTypeInsist === null) {
-                    meetingTypeInsist = webrtcElements.MeetingType.HOST;
+                const hostId = pageElements.getRoomIdentifier(room.id);
+                if (!hostId) {
+                    return webrtcElements.MeetingType.HOST;
                 } else {
-                    throw new ControlledError(`roomId: ${room.id}, host not set up`);
+                    const hostSignal =
+                    await fetch(
+                        `api/host?id=${hostId}`,
+                        {
+                            method: 'GET'
+                        }
+                    );
+
+                    return hostSignal.ok ?
+                        webrtcElements.MeetingType.GUEST :
+                        webrtcElements.MeetingType.HOST;
                 }
             } else {
-                meetingTypeInsist = webrtcElements.MeetingType.GUEST;
+                return meetingTypeInsist;
             }
-        }
-    }
+        })(meetingTypeInsist);
 
-    if (meetingTypeInsist === webrtcElements.MeetingType.GUEST) {
-        const hostSignalJson = await hostSignal!.json();
+    if (meetingType === webrtcElements.MeetingType.GUEST) {
+        const hostId = pageElements.getRoomIdentifier(room.id);
+        if (!hostId) {
+            throw new Error(`roomId: ${room.id}, empty hostId`);
+        }
+
+        const hostSignal = await fetch(`api/host?id=${hostId}`, {
+            method: 'GET'
+        });
+
+        if (!hostSignal.ok) {
+            throw new ControlledError(`roomId: ${room.id}, host not set up`);
+        }
+
+        const hostSignalJson = await hostSignal.json();
 
         const rd = JSON.parse(atob(hostSignalJson.description));
 
@@ -307,9 +322,7 @@ async function prepareGuestAnswerOrHostOffer(
 
         const answerDescription = await peerConnection.createAnswer();
         peerConnection.setLocalDescription(answerDescription);
-
-        return webrtcElements.MeetingType.GUEST;
-    } else/* if (meetingTypeEnforce === MeetingType.HOST)*/ {
+    } else/* if (meetingType === MeetingType.HOST)*/ {
         if (!media.audio) {
             peerConnection.addTransceiver('audio', { 'direction': 'recvonly' });
         }
@@ -322,9 +335,9 @@ async function prepareGuestAnswerOrHostOffer(
         const offer = await peerConnection.createOffer();
 
         await peerConnection.setLocalDescription(offer);
-
-        return webrtcElements.MeetingType.HOST;
     }
+
+    return meetingType;
 }
 
 async function waitForLocalDescription(

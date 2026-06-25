@@ -98,7 +98,7 @@ export async function roomTogglePlay(
             if (roomPausing) {
                 roomPausing.remove();
             }
-            
+
             pageElements.roomSetProgress(roomId, '');
         } catch (error) {
             pageElements.roomSetError(roomId, `${error}`);
@@ -109,12 +109,13 @@ export async function roomTogglePlay(
             element.disabled = false;
         }
     } else {
+        pageElements.roomSetProgress(roomId, 'paused');
+        
         for (const element of elements) {
             element.disabled = false;
         }
         self.checked = true;
 
-        pageElements.roomSetProgress(roomId, 'paused');
         pageElements.roomPause(roomId);
     }
 }

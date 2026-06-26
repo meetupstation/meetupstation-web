@@ -1,11 +1,7 @@
 import * as pageElements from './pageElements.js';
 import * as webrtcElements from './webrtcElements.js';
+import * as signalling from './signalling.js';
 
-class ControlledError extends Error {
-    constructor(message: string) {
-        super(message);
-    }
-}
 export async function meet(
     roomId:number,
     rooms: Map<string, webrtcElements.Room>
@@ -52,7 +48,8 @@ export async function meet(
                 await prepareGuestAnswerOrHostOffer(
                     peerConnection,
                     room,
-                    meetingType
+                    meetingType,
+                    pageElements.getRoomIdentifier(room.id)
                 );
 
             pageElements.roomSetProgress(
@@ -78,7 +75,7 @@ export async function meet(
                     );
 
                 if (hostSignal.ok) {
-                    throw new ControlledError('host already exists, while trying to create a new one');
+                    throw new webrtcElements.ControlledError('host already exists, while trying to create a new one');
                 }
 
                 pageElements.roomSetProgress(
@@ -107,24 +104,12 @@ export async function meet(
                             '(re?)creating the host'
                         );
 
-                        const hostSignal =
-                            await fetch(
-                                'api/host',
-                                {
-                                    method: 'POST',
-                                    body: `{"id": "${pageElements.getRoomIdentifier(room.id)}", "description": "${localSessionDescription}"}`,
-                                    headers: {
-                                        'Content-type': 'application/json; charset=UTF-8'
-                                    }
-                                }
-                            );
-
-                        if (!hostSignal.ok) {
-                            throw new ControlledError('while trying to establish the host id');
-                        }
-
-                        const hostSignalJson = await hostSignal.json();
-                        pageElements.setRoomIdentifier(room.id, hostSignalJson.id);
+                        const signallingHost = await signalling.hostPost(
+                            pageElements.getRoomIdentifier(room.id),
+                            localSessionDescription,
+                            ''
+                        );
+                        pageElements.setRoomIdentifier(room.id, signallingHost.id);
                     } else {
                         const guestSignalJson = await guestSignal.json();
                         if (guestSignalJson.guestDescription) {
@@ -151,7 +136,7 @@ export async function meet(
                     );
 
                 if (!guestSignal.ok) {
-                    throw new ControlledError('while trying to find the host');
+                    throw new webrtcElements.ControlledError('while trying to find the host');
                 }
 
                 //const _guestSignalJson =
@@ -210,7 +195,7 @@ export async function meet(
                     room.peerConnections.delete(peerConnectionId);
                 }
 
-                if (error instanceof ControlledError &&
+                if (error instanceof webrtcElements.ControlledError &&
                     pageElements.roomRepeatChecked(room.id)
                 ) {
                     continue;
@@ -248,7 +233,8 @@ async function initializePeerConnection(
 async function prepareGuestAnswerOrHostOffer(
     peerConnection: RTCPeerConnection,
     room: webrtcElements.Room,
-    meetingTypeInsist: webrtcElements.MeetingType|null
+    meetingTypeInsist: webrtcElements.MeetingType|null,
+    roomIdentifier: string
 ): Promise<webrtcElements.MeetingType> {
 
     const media = await pageElements.getUserMedia(room.id);
@@ -263,13 +249,21 @@ async function prepareGuestAnswerOrHostOffer(
         );
     }
 
-    peerConnection.onicecandidate = (event) => {
+    const signallingHost = await signalling.hostPost(roomIdentifier,'','');
+
+    peerConnection.onicecandidate = async (event) => {
         // this is what makes waitForLocalDescription functional
         //
         if (event.candidate === null) {
             // console.log('all ice candidates', event);
             const ld = JSON.stringify(peerConnection.localDescription);
             room.localSessionDescription = btoa(ld);
+        } else {
+            await signalling.hostPost(
+                roomIdentifier,
+                btoa(JSON.stringify(event.candidate)),
+                signallingHost.accessKey
+            );
         }
     };
 
@@ -309,7 +303,7 @@ async function prepareGuestAnswerOrHostOffer(
         });
 
         if (!hostSignal.ok) {
-            throw new ControlledError(`roomId: ${room.id}, host not set up`);
+            throw new webrtcElements.ControlledError(`roomId: ${room.id}, host not set up`);
         }
 
         const hostSignalJson = await hostSignal.json();
@@ -374,12 +368,12 @@ async function waitForIceConnected(
         pageElements.assertRoomActive(room.id);
 
         if (steps == timeOut) {
-            throw new ControlledError(`roomId: ${room.id} gave up while waiting for ice connection`);
+            throw new webrtcElements.ControlledError(`roomId: ${room.id} gave up while waiting for ice connection`);
         }
     }
 
     if (peerConnection.iceConnectionState !== 'connected') {
-        throw new ControlledError(`unexpected iceConnectionState (connected?) while waiting for ice connection: ${peerConnection.iceConnectionState}`);
+        throw new webrtcElements.ControlledError(`unexpected iceConnectionState (connected?) while waiting for ice connection: ${peerConnection.iceConnectionState}`);
     }
 }
 
@@ -403,7 +397,7 @@ async function waitForIceDisonnected(
     }
 
     if (peerConnection.iceConnectionState !== 'disconnected') {
-        throw new ControlledError(`unexpected iceConnectionState (disconnected?) while waiting for ice connection: ${peerConnection.iceConnectionState}`);
+        throw new webrtcElements.ControlledError(`unexpected iceConnectionState (disconnected?) while waiting for ice connection: ${peerConnection.iceConnectionState}`);
     }
 }
 

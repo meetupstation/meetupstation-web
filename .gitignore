@@ -4,4 +4,5 @@ v2/webrtc.js
 v2/page.js
 v2/webrtcElements.js
 v2/pageElements.js
+v2/signalling.js
 node_modules

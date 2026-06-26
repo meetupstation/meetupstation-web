@@ -16,3 +16,9 @@ export class Room {
         this.rooms = rooms;
     }
 };
+
+export class ControlledError extends Error {
+    constructor(message: string) {
+        super(message);
+    }
+};

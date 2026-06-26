@@ -2,6 +2,11 @@ import * as pageElements from './pageElements.js';
 import * as webrtcElements from './webrtcElements.js';
 import * as signalling from './signalling.js';
 
+export class RoomPreparation {
+    meetingType: webrtcElements.MeetingType = webrtcElements.MeetingType.HOST;
+    signallingHost: signalling.Host|null = null;
+};
+
 export async function meet(
     roomId:number,
     rooms: Map<string, webrtcElements.Room>
@@ -44,13 +49,18 @@ export async function meet(
                 'creating the guest answer or the host offer'
             );
 
-            meetingType =
+            const roomPreparation =
                 await prepareGuestAnswerOrHostOffer(
                     peerConnection,
                     room,
                     meetingType,
                     pageElements.getRoomIdentifier(room.id)
                 );
+
+            if (roomPreparation.signallingHost) {
+                pageElements.setRoomIdentifier(room.id, roomPreparation.signallingHost.id);
+            }
+            meetingType = roomPreparation.meetingType;
 
             pageElements.roomSetProgress(
                 room.id,
@@ -235,7 +245,9 @@ async function prepareGuestAnswerOrHostOffer(
     room: webrtcElements.Room,
     meetingTypeInsist: webrtcElements.MeetingType|null,
     roomIdentifier: string
-): Promise<webrtcElements.MeetingType> {
+): Promise<RoomPreparation> {
+
+    const roomPreparation: RoomPreparation = new RoomPreparation();
 
     const media = await pageElements.getUserMedia(room.id);
     if (media.stream) {
@@ -249,8 +261,6 @@ async function prepareGuestAnswerOrHostOffer(
         );
     }
 
-    const signallingHost = await signalling.hostPost(roomIdentifier,'','');
-
     peerConnection.onicecandidate = async (event) => {
         // this is what makes waitForLocalDescription functional
         //
@@ -258,16 +268,16 @@ async function prepareGuestAnswerOrHostOffer(
             // console.log('all ice candidates', event);
             const ld = JSON.stringify(peerConnection.localDescription);
             room.localSessionDescription = btoa(ld);
-        } else {
+        } else if (roomPreparation.signallingHost) {
             await signalling.hostPost(
-                roomIdentifier,
+                roomPreparation.signallingHost.id,
                 btoa(JSON.stringify(event.candidate)),
-                signallingHost.accessKey
+                roomPreparation.signallingHost.accessKey
             );
         }
     };
 
-    const meetingType = await (
+    roomPreparation.meetingType = await (
         async (meetingTypeInsist: webrtcElements.MeetingType|null)
             : Promise<webrtcElements.MeetingType> => {
             if (meetingTypeInsist === null) {
@@ -292,7 +302,7 @@ async function prepareGuestAnswerOrHostOffer(
             }
         })(meetingTypeInsist);
 
-    if (meetingType === webrtcElements.MeetingType.GUEST) {
+    if (roomPreparation.meetingType === webrtcElements.MeetingType.GUEST) {
         const hostId = pageElements.getRoomIdentifier(room.id);
         if (!hostId) {
             throw new Error(`roomId: ${room.id}, empty hostId`);
@@ -316,7 +326,7 @@ async function prepareGuestAnswerOrHostOffer(
 
         const answerDescription = await peerConnection.createAnswer();
         peerConnection.setLocalDescription(answerDescription);
-    } else/* if (meetingType === MeetingType.HOST)*/ {
+    } else/* if (roomPreparation.meetingType === MeetingType.HOST)*/ {
         if (!media.audio) {
             peerConnection.addTransceiver('audio', { 'direction': 'recvonly' });
         }
@@ -329,9 +339,11 @@ async function prepareGuestAnswerOrHostOffer(
         const offer = await peerConnection.createOffer();
 
         await peerConnection.setLocalDescription(offer);
+
+        roomPreparation.signallingHost = await signalling.hostPost(roomIdentifier,'','');
     }
 
-    return meetingType;
+    return roomPreparation;
 }
 
 async function waitForLocalDescription(

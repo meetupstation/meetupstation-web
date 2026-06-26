@@ -5,6 +5,8 @@ export enum MeetingType {
 
 export class Room {
     id: number;
+    signalId: string = '';
+    signalAcccessKey: string = '';
     rooms: Map<string, Room>;
     peerConnections: Map<string, RTCPeerConnection> = new Map();
     localSessionDescription: string|null = null;

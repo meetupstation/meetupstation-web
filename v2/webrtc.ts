@@ -303,6 +303,10 @@ async function prepareGuestAnswerOrHostOffer(
         const answerDescription = await peerConnection.createAnswer();
         peerConnection.setLocalDescription(answerDescription);
     } else/* if (meetingType === MeetingType.HOST)*/ {
+        const signallingHost = await signalling.hostPost(room.signalId,'','');
+        room.signalId = signallingHost.id;
+        room.signalAcccessKey = signallingHost.accessKey;
+        
         if (!media.audio) {
             peerConnection.addTransceiver('audio', { 'direction': 'recvonly' });
         }
@@ -315,10 +319,6 @@ async function prepareGuestAnswerOrHostOffer(
         const offer = await peerConnection.createOffer();
 
         await peerConnection.setLocalDescription(offer);
-
-        const signallingHost = await signalling.hostPost(room.signalId,'','');
-        room.signalId = signallingHost.id;
-        room.signalAcccessKey = signallingHost.accessKey;
     }
 
     return meetingType;

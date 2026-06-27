@@ -235,24 +235,30 @@ async function prepareGuestAnswerOrHostOffer(
 
 async function signalLocalOperations(
     room: webrtcElements.Room
-): Promise<void> {
+): Promise<boolean> {
+    let final: boolean = false;
+
     if (room.localSessionDescription || room.localCandidates.length) {
         if (room.meetingType === webrtcElements.MeetingType.HOST) {
             await signalling.hostPost(room, 'waiting for ice connected');
         } else {
             await signalling.guestPost(room, 'waiting for ice connected');
+            final = !!room.localSessionDescription;
         }
         room.localSessionDescription = '';
         room.localCandidates = [];
     }
+
+    return final;
 }
 
 async function signalRemoteOperations(
     room: webrtcElements.Room,
     peerConnection: RTCPeerConnection
-): Promise<void> {
-    if (room.meetingType === webrtcElements.MeetingType.HOST) {
+): Promise<boolean> {
+    let final: boolean = false;
 
+    if (room.meetingType === webrtcElements.MeetingType.HOST) {
         pageElements.roomSetProgress(
             room.id,
             'checking for the guest'
@@ -266,6 +272,7 @@ async function signalRemoteOperations(
             await peerConnection.setRemoteDescription(
                 JSON.parse(atob(room.remoteSessionDescription))
             );
+            final = true;
         } else if (room.remoteCandidates.length) {
             // for (const candidate of room.remoteCandidates) {
             //     await peerConnection.addIceCandidate(
@@ -327,19 +334,21 @@ async function signalRemoteOperations(
 
     room.remoteSessionDescription = '';
     room.remoteCandidates = [];
+
+    return final;
 }
 
 async function waitForIceConnected(
     room: webrtcElements.Room,
     peerConnection: RTCPeerConnection
 ): Promise<void> {
-    const stepWait = 100;
-    const timeOut = 360 * 1000 / stepWait;
-
-    await signalLocalOperations(room);
-    await signalRemoteOperations(room, peerConnection);
+    const stepWait = 50;
+    const timeOut = 60 * 1000 / stepWait;
 
     let steps = 0;
+
+    let final: boolean = false;
+
     while (
         [
             'new',
@@ -347,8 +356,8 @@ async function waitForIceConnected(
             'disconnected'
         ].indexOf(peerConnection.iceConnectionState) !== -1
     ) {
-        await signalLocalOperations(room);
-        await signalRemoteOperations(room, peerConnection);
+        final = final || await signalLocalOperations(room);
+        final = final || await signalRemoteOperations(room, peerConnection);
 
         await new Promise(resolve => setTimeout(resolve, stepWait));
 
@@ -358,6 +367,12 @@ async function waitForIceConnected(
         if (steps > timeOut) {
             throw new webrtcElements.ControlledError(`roomId: ${room.id} gave up while waiting for ice connection`);
         }
+    }
+
+    while (!final) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        final = final || await signalLocalOperations(room);
+        final = final || await signalRemoteOperations(room, peerConnection);
     }
 
     if (peerConnection.iceConnectionState !== 'connected') {
@@ -375,9 +390,6 @@ async function waitForIceDisonnected(
         if (!room) {
             return;
         }
-
-        await signalLocalOperations(room);
-        await signalRemoteOperations(room, peerConnection);
 
         if (!!dataChannel === true && room.dataChannel === null) {
             pageElements.resetDataControllers();

@@ -235,8 +235,9 @@ async function prepareGuestAnswerOrHostOffer(
 
 async function signalRemoteOperations(
     room: webrtcElements.Room,
-    peerConnection: RTCPeerConnection
-): Promise<void> {
+    peerConnection: RTCPeerConnection,
+    done: boolean
+): Promise<boolean> {
     if (room.meetingType === webrtcElements.MeetingType.HOST) {
 
         pageElements.roomSetProgress(
@@ -249,9 +250,12 @@ async function signalRemoteOperations(
         );
 
         if (room.remoteSessionDescription) {
-            await peerConnection.setRemoteDescription(
-                JSON.parse(atob(room.remoteSessionDescription))
-            );
+            if (!done) {
+                await peerConnection.setRemoteDescription(
+                    JSON.parse(atob(room.remoteSessionDescription))
+                );
+                done = true;
+            }
         } else if (room.remoteCandidates.length) {
             // for (const candidate of room.remoteCandidates) {
             //     await peerConnection.addIceCandidate(
@@ -265,14 +269,17 @@ async function signalRemoteOperations(
             'preparing'
         );
         if (room.remoteSessionDescription) {
-            prepareDataChannel(room, peerConnection);
+            if (!done) {
+                prepareDataChannel(room, peerConnection);
 
-            await peerConnection.setRemoteDescription(
-                JSON.parse(atob(room.remoteSessionDescription))
-            );
+                await peerConnection.setRemoteDescription(
+                    JSON.parse(atob(room.remoteSessionDescription))
+                );
 
-            const answerDescription = await peerConnection.createAnswer();
-            peerConnection.setLocalDescription(answerDescription);
+                const answerDescription = await peerConnection.createAnswer();
+                peerConnection.setLocalDescription(answerDescription);
+                done = true;
+            }
         } else if (room.remoteCandidates.length) {
             // for (const candidate of room.remoteCandidates) {
             //     await peerConnection.addIceCandidate(
@@ -313,6 +320,7 @@ async function signalRemoteOperations(
 
     room.remoteSessionDescription = '';
     room.remoteCandidates = [];
+    return done;
 }
 
 async function signalLocalOperations(

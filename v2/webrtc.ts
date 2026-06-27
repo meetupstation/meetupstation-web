@@ -161,7 +161,7 @@ async function prepareGuestAnswerOrHostOffer(
         );
     }
 
-    peerConnection.onicecandidate = async (event) => {
+    peerConnection.onicecandidate = (event) => {
         if (event.candidate === null) {
             room.localSessionDescription =
             btoa(JSON.stringify(peerConnection.localDescription));
@@ -375,6 +375,9 @@ async function waitForIceDisonnected(
         if (!room) {
             return;
         }
+
+        await signalLocalOperations(room);
+        await signalRemoteOperations(room, peerConnection);
 
         if (!!dataChannel === true && room.dataChannel === null) {
             pageElements.resetDataControllers();

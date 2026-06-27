@@ -252,7 +252,7 @@ async function signalRemoteOperations(
             await peerConnection.setRemoteDescription(
                 JSON.parse(atob(room.remoteSessionDescription))
             );
-        } else if (room.remoteCandidates) {
+        } else if (room.remoteCandidates.length) {
             // for (const candidate of room.remoteCandidates) {
             //     await peerConnection.addIceCandidate(
             //         JSON.parse(atob(candidate))
@@ -273,7 +273,7 @@ async function signalRemoteOperations(
 
             const answerDescription = await peerConnection.createAnswer();
             peerConnection.setLocalDescription(answerDescription);
-        } else if (room.remoteCandidates) {
+        } else if (room.remoteCandidates.length) {
             // for (const candidate of room.remoteCandidates) {
             //     await peerConnection.addIceCandidate(
             //         JSON.parse(atob(candidate))
@@ -318,7 +318,7 @@ async function signalRemoteOperations(
 async function signalLocalOperations(
     room: webrtcElements.Room
 ): Promise<void> {
-    if (room.localSessionDescription || room.localCandidates) {
+    if (room.localSessionDescription || room.localCandidates.length) {
         if (room.meetingType === webrtcElements.MeetingType.HOST) {
             await signalling.hostPost(room, 'waiting for ice connected');
         } else {
@@ -326,7 +326,6 @@ async function signalLocalOperations(
         }
         room.localSessionDescription = '';
         room.localCandidates = [];
-
     }
 }
 

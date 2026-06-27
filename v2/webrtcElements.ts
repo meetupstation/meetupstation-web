@@ -10,7 +10,10 @@ export class Room {
     signalAccessKey: string = '';
     rooms: Map<string, Room>;
     peerConnections: Map<string, RTCPeerConnection> = new Map();
-    localSessionDescription: string|null = null;
+    localSessionDescription: string = '';
+    localCandidates: string[] = [];
+    remoteSessionDescription: string = '';
+    remoteCandidates: string[] = [];
     dataChannel: RTCDataChannel|null = null;
     nextPeerConnectionId: number = 0;
 

@@ -21,6 +21,9 @@ export async function meet(
         )(rooms);
 
         room.localSessionDescription = '';
+        room.localCandidates = [];
+        room.remoteSessionDescription = '';
+        room.remoteCandidates = [];
 
         const peerConnectionId = `${room.nextPeerConnectionId}`;
         try {
@@ -49,8 +52,7 @@ export async function meet(
             room.meetingType =
                 await prepareGuestAnswerOrHostOffer(
                     peerConnection,
-                    room,
-                    room.meetingType
+                    room
                 );
 
             pageElements.setRoomIdentifier(room.id, room.signalId);
@@ -103,13 +105,35 @@ export async function meet(
                     }
                 }
             } else {
+                await signalling.hostGet(
+                    room,
+                    'preparing'
+                );
+                if (room.remoteSessionDescription) {
+                    prepareDataChannel(room, peerConnection);
+
+                    const rd = JSON.parse(atob(room.remoteSessionDescription));
+                    await peerConnection.setRemoteDescription(rd);
+
+                    const answerDescription = await peerConnection.createAnswer();
+                    peerConnection.setLocalDescription(answerDescription);
+                } else if (room.remoteCandidates) {
+                    for (const candidate of room.remoteCandidates) {
+
+                        const cd = JSON.parse(atob(candidate));
+                        await peerConnection.addIceCandidate(cd);
+                    }
+                    const answerDescription = await peerConnection.createAnswer();
+                    peerConnection.setLocalDescription(answerDescription);
+                }
+
                 pageElements.roomSetProgress(
                     room.id,
                     'collecting all ice candidates'
                 );
 
                 const localSessionDescription = await waitForLocalDescription(room);
-                
+
                 const guestSignal =
                     await fetch(
                         'api/guest',
@@ -222,8 +246,7 @@ async function initializePeerConnection(
 
 async function prepareGuestAnswerOrHostOffer(
     peerConnection: RTCPeerConnection,
-    room: webrtcElements.Room,
-    meetingTypeInsist: webrtcElements.MeetingType|null
+    room: webrtcElements.Room
 ): Promise<webrtcElements.MeetingType> {
 
     const media = await pageElements.getUserMedia(room.id);
@@ -273,7 +296,7 @@ async function prepareGuestAnswerOrHostOffer(
             room.meetingType === webrtcElements.MeetingType.GUEST
         ) {
             try {
-                
+
             } catch (error) {
                 console.error(error);
             }
@@ -290,25 +313,23 @@ async function prepareGuestAnswerOrHostOffer(
             }
 
             if (meetingTypeInsist === null) {
-                /*if (!room.signalId) {
-                    return webrtcElements.MeetingType.HOST;
-                } else */{
-                    const hostSignal =
-                    await fetch(
-                        `api/host?id=${room.signalId}`,
-                        {
-                            method: 'GET'
-                        }
+                try {
+                    await signalling.hostGet(
+                        room,
+                        'determining meeting type'
                     );
-
-                    return hostSignal.ok ?
-                        webrtcElements.MeetingType.GUEST :
-                        webrtcElements.MeetingType.HOST;
+                    return webrtcElements.MeetingType.GUEST;
+                } catch (error) {
+                    if (error instanceof webrtcElements.ControlledError) {
+                        return webrtcElements.MeetingType.HOST;
+                    } else {
+                        throw error;
+                    }
                 }
             } else {
                 return meetingTypeInsist;
             }
-        })(meetingTypeInsist);
+        })(room.meetingType);
 
     if (room.meetingType === webrtcElements.MeetingType.HOST) {
         const signallingHost =
@@ -334,32 +355,7 @@ async function prepareGuestAnswerOrHostOffer(
         const offer = await peerConnection.createOffer();
 
         await peerConnection.setLocalDescription(offer);
-    } else/* if (room.meetingType === webrtcElements.MeetingType.GUEST) */{
-        const hostSignal =
-            await fetch(
-                `api/host?id=${room.signalId}`,
-                {
-                    method: 'GET'
-                }
-            );
-
-        if (!hostSignal.ok) {
-            throw new webrtcElements.ControlledError(`roomId: ${room.id}, host not set up`);
-        }
-
-        const hostSignalJson = await hostSignal.json();
-
-        if (!hostSignalJson.description) {
-            throw new webrtcElements.ControlledError(`roomId: ${room.id}, host not FULLY set up`);
-        }
-        const rd = JSON.parse(atob(hostSignalJson.description));
-
-        prepareDataChannel(room, peerConnection);
-
-        await peerConnection.setRemoteDescription(rd);
-
-        const answerDescription = await peerConnection.createAnswer();
-        peerConnection.setLocalDescription(answerDescription);
+    } else /*if (room.meetingType === webrtcElements.MeetingType.GUEST) */{
     }
 
     return room.meetingType;
@@ -374,7 +370,7 @@ async function waitForLocalDescription(
     }
 
     const localSessionDescription = room.localSessionDescription!;
-    room.localSessionDescription = null;
+    room.localSessionDescription = '';
     return localSessionDescription;
 }
 

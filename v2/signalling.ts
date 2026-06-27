@@ -1,6 +1,6 @@
 import * as webrtcElements from './webrtcElements.js';
 
-export class Host {
+export class HostHandle {
     id: string;
     accessKey: string;
 
@@ -16,7 +16,7 @@ export async function hostPost(
     candidate: string,
     accessKey: string,
     operationInfo: string
-): Promise<Host> {
+): Promise<HostHandle> {
     const hostSignal = await fetch(
         'api/host',
         {
@@ -39,5 +39,26 @@ export async function hostPost(
 
     const hostSignalJson = await hostSignal.json();
 
-    return new Host(hostSignalJson.id, hostSignalJson.accessKey);
+    return new HostHandle(hostSignalJson.id, hostSignalJson.accessKey);
+}
+
+export async function hostGet(
+    room: webrtcElements.Room,
+    operationInfo: string
+): Promise<void> {
+    const hostSignal =
+        await fetch(
+            `api/host?id=${room.signalId}`,
+            {
+                method: 'GET'
+            }
+        );
+    if (!hostSignal.ok) {
+        throw new webrtcElements.ControlledError(`${room.signalId} not set up, while ${operationInfo}`);
+    }
+
+    const hostSignalJson = await hostSignal.json();
+
+    room.remoteSessionDescription = hostSignalJson.description;
+    room.remoteCandidates = hostSignalJson.description;
 }

@@ -270,6 +270,9 @@ async function signalRemoteOperations(
             await peerConnection.setRemoteDescription(
                 JSON.parse(atob(room.remoteSessionDescription))
             );
+
+            const answerDescription = await peerConnection.createAnswer();
+            peerConnection.setLocalDescription(answerDescription);
         } else if (room.remoteCandidates) {
             // for (const candidate of room.remoteCandidates) {
             //     await peerConnection.addIceCandidate(
@@ -277,9 +280,6 @@ async function signalRemoteOperations(
             //     );
             // }
         }
-
-        const answerDescription = await peerConnection.createAnswer();
-        peerConnection.setLocalDescription(answerDescription);
 
         // pageElements.roomSetProgress(
         //     room.id,

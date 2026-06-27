@@ -253,11 +253,11 @@ async function signalRemoteOperations(
                 JSON.parse(atob(room.remoteSessionDescription))
             );
         } else if (room.remoteCandidates) {
-            for (const candidate of room.remoteCandidates) {
-                await peerConnection.addIceCandidate(
-                    JSON.parse(atob(candidate))
-                );
-            }
+            // for (const candidate of room.remoteCandidates) {
+            //     await peerConnection.addIceCandidate(
+            //         JSON.parse(atob(candidate))
+            //     );
+            // }
         }
     } else {
         await signalling.hostGet(
@@ -271,11 +271,11 @@ async function signalRemoteOperations(
                 JSON.parse(atob(room.remoteSessionDescription))
             );
         } else if (room.remoteCandidates) {
-            for (const candidate of room.remoteCandidates) {
-                await peerConnection.addIceCandidate(
-                    JSON.parse(atob(candidate))
-                );
-            }
+            // for (const candidate of room.remoteCandidates) {
+            //     await peerConnection.addIceCandidate(
+            //         JSON.parse(atob(candidate))
+            //     );
+            // }
         }
 
         const answerDescription = await peerConnection.createAnswer();
@@ -324,6 +324,9 @@ async function signalLocalOperations(
         } else {
             await signalling.guestPost(room, 'waiting for ice connected');
         }
+        room.localSessionDescription = '';
+        room.localCandidates = [];
+
     }
 }
 

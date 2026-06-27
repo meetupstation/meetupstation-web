@@ -250,7 +250,7 @@ async function signalLocalOperations(
 async function signalRemoteOperations(
     room: webrtcElements.Room,
     peerConnection: RTCPeerConnection
-): Promise<boolean> {
+): Promise<void> {
     if (room.meetingType === webrtcElements.MeetingType.HOST) {
 
         pageElements.roomSetProgress(

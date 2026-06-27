@@ -249,8 +249,7 @@ async function signalLocalOperations(
 
 async function signalRemoteOperations(
     room: webrtcElements.Room,
-    peerConnection: RTCPeerConnection,
-    done: boolean
+    peerConnection: RTCPeerConnection
 ): Promise<boolean> {
     if (room.meetingType === webrtcElements.MeetingType.HOST) {
 
@@ -264,12 +263,9 @@ async function signalRemoteOperations(
         );
 
         if (room.remoteSessionDescription) {
-            if (!done) {
-                await peerConnection.setRemoteDescription(
-                    JSON.parse(atob(room.remoteSessionDescription))
-                );
-                done = true;
-            }
+            await peerConnection.setRemoteDescription(
+                JSON.parse(atob(room.remoteSessionDescription))
+            );
         } else if (room.remoteCandidates.length) {
             // for (const candidate of room.remoteCandidates) {
             //     await peerConnection.addIceCandidate(
@@ -283,17 +279,14 @@ async function signalRemoteOperations(
             'preparing'
         );
         if (room.remoteSessionDescription) {
-            if (!done) {
-                prepareDataChannel(room, peerConnection);
+            prepareDataChannel(room, peerConnection);
 
-                await peerConnection.setRemoteDescription(
-                    JSON.parse(atob(room.remoteSessionDescription))
-                );
+            await peerConnection.setRemoteDescription(
+                JSON.parse(atob(room.remoteSessionDescription))
+            );
 
-                const answerDescription = await peerConnection.createAnswer();
-                peerConnection.setLocalDescription(answerDescription);
-                done = true;
-            }
+            const answerDescription = await peerConnection.createAnswer();
+            peerConnection.setLocalDescription(answerDescription);
         } else if (room.remoteCandidates.length) {
             // for (const candidate of room.remoteCandidates) {
             //     await peerConnection.addIceCandidate(
@@ -334,7 +327,6 @@ async function signalRemoteOperations(
 
     room.remoteSessionDescription = '';
     room.remoteCandidates = [];
-    return done;
 }
 
 async function waitForIceConnected(
@@ -344,8 +336,10 @@ async function waitForIceConnected(
     const stepWait = 100;
     const timeOut = 360 * 1000 / stepWait;
 
+    await signalLocalOperations(room);
+    await signalRemoteOperations(room, peerConnection);
+
     let steps = 0;
-    let done: boolean = false;
     while (
         [
             'new',
@@ -354,7 +348,7 @@ async function waitForIceConnected(
         ].indexOf(peerConnection.iceConnectionState) !== -1
     ) {
         await signalLocalOperations(room);
-        done = await signalRemoteOperations(room, peerConnection, done);
+        await signalRemoteOperations(room, peerConnection);
 
         await new Promise(resolve => setTimeout(resolve, stepWait));
 

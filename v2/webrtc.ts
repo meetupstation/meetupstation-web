@@ -61,52 +61,26 @@ export async function meet(
 
                 pageElements.roomSetProgress(
                     room.id,
-                    'going to wait for the guest to join...'
+                    'checking for the guest'
+                );
+                await signalling.guestGet(
+                    room,
+                    'checking for the guest'
                 );
 
-                while (true) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-
-                    pageElements.roomSetProgress(
-                        room.id,
-                        'waiting for the guest to join...'
+                if (room.remoteSessionDescription) {
+                    await peerConnection.setRemoteDescription(
+                        JSON.parse(atob(room.remoteSessionDescription))
                     );
-                    const guestSignal =
-                        await fetch(
-                            `api/guest?hostId=${room.signalId}`,
-                            {
-                                method: 'GET'
-                            }
+                } else if (room.remoteCandidates) {
+                    for (const candidate of room.remoteCandidates) {
+                        await peerConnection.addIceCandidate(
+                            JSON.parse(atob(candidate))
                         );
-
-                    if (!guestSignal.ok) {
-                        throw new webrtcElements.ControlledError('see what happens');
-                        pageElements.roomSetProgress(
-                            room.id,
-                            're-signalling the host'
-                        );
-
-                        await signalling.hostPost(
-                            room.signalId,
-                            room.localSessionDescription,
-                            '',
-                            room.signalAccessKey,
-                            're-signalling the host'
-                        );
-
-                    } else {
-                        const guestSignalJson = await guestSignal.json();
-                        if (guestSignalJson.guestDescription) {
-                            await peerConnection.setRemoteDescription(
-                                JSON.parse(atob(guestSignalJson.guestDescription))
-                            );
-
-                            break;
-                        }
-
-                        throw new webrtcElements.ControlledError('see what happens 2');
                     }
                 }
+                room.remoteSessionDescription = '';
+                room.remoteCandidates = [];
             } else {
                 await signalling.hostGet(
                     room,
@@ -115,49 +89,50 @@ export async function meet(
                 if (room.remoteSessionDescription) {
                     prepareDataChannel(room, peerConnection);
 
-                    const rd = JSON.parse(atob(room.remoteSessionDescription));
-                    await peerConnection.setRemoteDescription(rd);
-
-                    const answerDescription = await peerConnection.createAnswer();
-                    peerConnection.setLocalDescription(answerDescription);
+                    await peerConnection.setRemoteDescription(
+                        JSON.parse(atob(room.remoteSessionDescription))
+                    );
                 } else if (room.remoteCandidates) {
                     for (const candidate of room.remoteCandidates) {
-
-                        const cd = JSON.parse(atob(candidate));
-                        await peerConnection.addIceCandidate(cd);
+                        await peerConnection.addIceCandidate(
+                            JSON.parse(atob(candidate))
+                        );
                     }
-                    const answerDescription = await peerConnection.createAnswer();
-                    peerConnection.setLocalDescription(answerDescription);
                 }
+                room.remoteSessionDescription = '';
+                room.remoteCandidates = [];
 
-                pageElements.roomSetProgress(
-                    room.id,
-                    'collecting all ice candidates'
-                );
+                const answerDescription = await peerConnection.createAnswer();
+                peerConnection.setLocalDescription(answerDescription);
 
-                const localSessionDescription = await waitForLocalDescription(room);
+                // pageElements.roomSetProgress(
+                //     room.id,
+                //     'collecting all ice candidates'
+                // );
 
-                const guestSignal =
-                    await fetch(
-                        'api/guest',
-                        {
-                            method: 'POST',
-                            body: JSON.stringify({
-                                hostId: room.signalId,
-                                guestDescription: localSessionDescription
-                            }),
-                            headers: {
-                                'Content-type': 'application/json; charset=UTF-8'
-                            }
-                        }
-                    );
+                // // const localSessionDescription = await waitForLocalDescription(room);
 
-                if (!guestSignal.ok) {
-                    throw new webrtcElements.ControlledError('while trying to find the host');
-                }
+                // const guestSignal =
+                //     await fetch(
+                //         'api/guest',
+                //         {
+                //             method: 'POST',
+                //             body: JSON.stringify({
+                //                 hostId: room.signalId,
+                //                 guestDescription: localSessionDescription
+                //             }),
+                //             headers: {
+                //                 'Content-type': 'application/json; charset=UTF-8'
+                //             }
+                //         }
+                //     );
 
-                //const _guestSignalJson =
-                await guestSignal.json();
+                // if (!guestSignal.ok) {
+                //     throw new webrtcElements.ControlledError('while trying to find the host');
+                // }
+
+                // //const _guestSignalJson =
+                // await guestSignal.json();
             }
 
             pageElements.roomSetProgress(
@@ -266,45 +241,10 @@ async function prepareGuestAnswerOrHostOffer(
 
     peerConnection.onicecandidate = async (event) => {
         if (event.candidate === null) {
-            room.localSessionDescription = btoa(JSON.stringify(peerConnection.localDescription));
-
-            const signalHost = await signalling.hostPost(
-                room.signalId,
-                room.localSessionDescription,
-                '',
-                room.signalAccessKey,
-                'signalling local session description'
-            );
-            room.signalId = signalHost.id;
-            room.signalAccessKey = signalHost.accessKey;
-        } else if (
-            room.signalId &&
-            room.meetingType === webrtcElements.MeetingType.HOST
-        ) {
-            try {
-                const signalHost = await signalling.hostPost(
-                    room.signalId,
-                    '',
-                    btoa(JSON.stringify(event.candidate)),
-                    room.signalAccessKey,
-                    'signalling a new candidate'
-                );
-                room.signalId = signalHost.id;
-                room.signalAccessKey = signalHost.accessKey;
-            } catch (error) {
-                console.error(error);
-            }
-        } else if (
-            room.signalId &&
-            room.meetingType === webrtcElements.MeetingType.GUEST
-        ) {
-            try {
-
-            } catch (error) {
-                console.error(error);
-            }
-        } else if (room.signalId) {
-            console.error('such peer connection must not receive candidate events');
+            room.localSessionDescription =
+            btoa(JSON.stringify(peerConnection.localDescription));
+        } else {
+            room.localCandidates.push(btoa(JSON.stringify(event.candidate)));
         }
     };
 
@@ -335,16 +275,10 @@ async function prepareGuestAnswerOrHostOffer(
         })(room.meetingType);
 
     if (room.meetingType === webrtcElements.MeetingType.HOST) {
-        const signallingHost =
-            await signalling.hostPost(
-                room.signalId,
-                '',
-                '',
-                '',
-                'signalling the host id the first time'
-            );
-        room.signalId = signallingHost.id;
-        room.signalAccessKey = signallingHost.accessKey;
+        await signalling.hostPost(
+            room,
+            'signalling the host id the first time'
+        );
 
         if (!media.audio) {
             peerConnection.addTransceiver('audio', { 'direction': 'recvonly' });
@@ -364,18 +298,18 @@ async function prepareGuestAnswerOrHostOffer(
     return room.meetingType;
 }
 
-async function waitForLocalDescription(
-    room: webrtcElements.Room
-): Promise<string> {
-    while (!room.localSessionDescription) {
-        await new Promise(resolve => setTimeout(resolve, 25));
-        pageElements.assertRoomActive(room.id);
-    }
+// async function waitForLocalDescription(
+//     room: webrtcElements.Room
+// ): Promise<string> {
+//     while (!room.localSessionDescription) {
+//         await new Promise(resolve => setTimeout(resolve, 25));
+//         pageElements.assertRoomActive(room.id);
+//     }
 
-    const localSessionDescription = room.localSessionDescription!;
-    room.localSessionDescription = '';
-    return localSessionDescription;
-}
+//     const localSessionDescription = room.localSessionDescription!;
+//     room.localSessionDescription = '';
+//     return localSessionDescription;
+// }
 
 async function waitForIceConnected(
     room: webrtcElements.Room,
@@ -383,6 +317,18 @@ async function waitForIceConnected(
 ): Promise<void> {
     const stepWait = 25;
     const timeOut = 60 * 1000 / stepWait;
+
+    const signallingOperations = async () => {
+        if (room.localSessionDescription || room.localCandidates) {
+            if (room.meetingType === webrtcElements.MeetingType.HOST) {
+                await signalling.hostPost(room, 'waiting for ice connected');
+            } else {
+                await signalling.guestPost(room, 'waiting for ice connected');
+            }
+        }
+    };
+
+    await signallingOperations();
 
     let steps = 0;
     while (

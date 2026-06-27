@@ -11,21 +11,18 @@ export class HostHandle {
 };
 
 export async function hostPost(
-    hostId: string,
-    description: string,
-    candidate: string,
-    accessKey: string,
+    room: webrtcElements.Room,
     operationInfo: string
-): Promise<HostHandle> {
+): Promise<void> {
     const hostSignal = await fetch(
         'api/host',
         {
             method: 'POST',
             body: JSON.stringify({
-                id: hostId,
-                description: description,
-                candidate: candidate,
-                accessKey: accessKey
+                id: room.signalId,
+                description: room.localSessionDescription,
+                candidates: room.localCandidates,
+                accessKey: room.signalAccessKey
             }),
             headers: {
                 'Content-type': 'application/json; charset=UTF-8'
@@ -39,7 +36,8 @@ export async function hostPost(
 
     const hostSignalJson = await hostSignal.json();
 
-    return new HostHandle(hostSignalJson.id, hostSignalJson.accessKey);
+    room.signalId = hostSignalJson.id;
+    room.signalAccessKey = hostSignalJson.accessKey;
 }
 
 export async function hostGet(
@@ -48,17 +46,67 @@ export async function hostGet(
 ): Promise<void> {
     const hostSignal =
         await fetch(
-            `api/host?id=${room.signalId}`,
+            `api/host?id=${room.signalId}&accessKey=${room.signalAccessKey}`,
             {
                 method: 'GET'
             }
         );
     if (!hostSignal.ok) {
-        throw new webrtcElements.ControlledError(`${room.signalId} not set up, while ${operationInfo}`);
+        throw new webrtcElements.ControlledError(`while ${operationInfo}: ${room.signalId} not set up`);
     }
 
     const hostSignalJson = await hostSignal.json();
 
     room.remoteSessionDescription = hostSignalJson.description;
-    room.remoteCandidates = hostSignalJson.description;
+    room.remoteCandidates = hostSignalJson.candidates;
+    room.signalAccessKey = hostSignalJson.accessKey;
+}
+
+export async function guestPost(
+    room: webrtcElements.Room,
+    operationInfo: string
+): Promise<void> {
+    const guestSignal = await fetch(
+        'api/guest',
+        {
+            method: 'POST',
+            body: JSON.stringify({
+                hostId: room.signalId,
+                description: room.localSessionDescription,
+                candidates: room.localCandidates,
+                accessKey: room.signalAccessKey
+            }),
+            headers: {
+                'Content-type': 'application/json; charset=UTF-8'
+            }
+        }
+    );
+
+    if (!guestSignal.ok) {
+        throw new webrtcElements.ControlledError(`while ${operationInfo}`);
+    }
+
+    //const guestSignalJson =
+    await guestSignal.json();
+}
+
+export async function guestGet(
+    room: webrtcElements.Room,
+    operationInfo: string
+): Promise<void> {
+    const guestSignal =
+        await fetch(
+            `api/guest?hostId=${room.signalId}&accessKey=${room.signalAccessKey}`,
+            {
+                method: 'GET'
+            }
+        );
+    if (!guestSignal.ok) {
+        throw new webrtcElements.ControlledError(`while ${operationInfo}: ${room.signalId} not set up`);
+    }
+
+    const guestSignalJson = await guestSignal.json();
+
+    room.remoteSessionDescription = guestSignalJson.description;
+    room.remoteCandidates = guestSignalJson.candidates;
 }

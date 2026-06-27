@@ -80,6 +80,7 @@ export async function meet(
                         );
 
                     if (!guestSignal.ok) {
+                        throw new webrtcElements.ControlledError('see what happens');
                         pageElements.roomSetProgress(
                             room.id,
                             're-signalling the host'

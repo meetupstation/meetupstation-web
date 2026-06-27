@@ -233,6 +233,20 @@ async function prepareGuestAnswerOrHostOffer(
 //     return localSessionDescription;
 // }
 
+async function signalLocalOperations(
+    room: webrtcElements.Room
+): Promise<void> {
+    if (room.localSessionDescription || room.localCandidates.length) {
+        if (room.meetingType === webrtcElements.MeetingType.HOST) {
+            await signalling.hostPost(room, 'waiting for ice connected');
+        } else {
+            await signalling.guestPost(room, 'waiting for ice connected');
+        }
+        room.localSessionDescription = '';
+        room.localCandidates = [];
+    }
+}
+
 async function signalRemoteOperations(
     room: webrtcElements.Room,
     peerConnection: RTCPeerConnection,
@@ -323,26 +337,12 @@ async function signalRemoteOperations(
     return done;
 }
 
-async function signalLocalOperations(
-    room: webrtcElements.Room
-): Promise<void> {
-    if (room.localSessionDescription || room.localCandidates.length) {
-        if (room.meetingType === webrtcElements.MeetingType.HOST) {
-            await signalling.hostPost(room, 'waiting for ice connected');
-        } else {
-            await signalling.guestPost(room, 'waiting for ice connected');
-        }
-        room.localSessionDescription = '';
-        room.localCandidates = [];
-    }
-}
-
 async function waitForIceConnected(
     room: webrtcElements.Room,
     peerConnection: RTCPeerConnection
 ): Promise<void> {
-    const stepWait = 25;
-    const timeOut = 60 * 1000 / stepWait;
+    const stepWait = 100;
+    const timeOut = 360 * 1000 / stepWait;
 
     let steps = 0;
     let done: boolean = false;

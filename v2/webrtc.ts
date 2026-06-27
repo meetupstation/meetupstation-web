@@ -361,7 +361,7 @@ async function waitForIceConnected(
         ++steps;
         pageElements.assertRoomActive(room.id);
 
-        if (steps == timeOut) {
+        if (steps > timeOut) {
             throw new webrtcElements.ControlledError(`roomId: ${room.id} gave up while waiting for ice connection`);
         }
     }

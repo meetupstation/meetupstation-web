@@ -103,6 +103,8 @@ export async function meet(
 
                             break;
                         }
+
+                        throw new webrtcElements.ControlledError('see what happens 2');
                     }
                 }
             } else {

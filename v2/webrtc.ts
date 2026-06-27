@@ -345,6 +345,7 @@ async function waitForIceConnected(
     const timeOut = 60 * 1000 / stepWait;
 
     let steps = 0;
+    let done: boolean = false;
     while (
         [
             'new',
@@ -353,7 +354,7 @@ async function waitForIceConnected(
         ].indexOf(peerConnection.iceConnectionState) !== -1
     ) {
         await signalLocalOperations(room);
-        await signalRemoteOperations(room, peerConnection);
+        done = await signalRemoteOperations(room, peerConnection, done);
 
         await new Promise(resolve => setTimeout(resolve, stepWait));
 

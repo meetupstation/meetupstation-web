@@ -44,6 +44,10 @@ export async function hostGet(
     room: webrtcElements.Room,
     operationInfo: string
 ): Promise<void> {
+    if (room.remoteSessionDescription || room.remoteCandidates.length) {
+        return;
+    }
+
     const hostSignal =
         await fetch(
             `api/host?id=${room.signalId}&accessKey=${room.signalAccessKey}`,
@@ -94,6 +98,10 @@ export async function guestGet(
     room: webrtcElements.Room,
     operationInfo: string
 ): Promise<void> {
+    if (room.remoteSessionDescription || room.remoteCandidates.length) {
+        return;
+    }
+
     const guestSignal =
         await fetch(
             `api/guest?hostId=${room.signalId}&accessKey=${room.signalAccessKey}`,

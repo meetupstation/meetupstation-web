@@ -24,6 +24,7 @@ export async function meet(
         room.localCandidates = [];
         room.remoteSessionDescription = '';
         room.remoteCandidates = [];
+        room.signallingComplete = false;
 
         const peerConnectionId = `${room.nextPeerConnectionId}`;
         try {
@@ -220,28 +221,20 @@ async function prepareGuestAnswerOrHostOffer(
     return room.meetingType;
 }
 
-// async function waitForLocalDescription(
-//     room: webrtcElements.Room
-// ): Promise<string> {
-//     while (!room.localSessionDescription) {
-//         await new Promise(resolve => setTimeout(resolve, 25));
-//         pageElements.assertRoomActive(room.id);
-//     }
-
-//     const localSessionDescription = room.localSessionDescription!;
-//     room.localSessionDescription = '';
-//     return localSessionDescription;
-// }
-
 async function signalGuestOperations(
     room: webrtcElements.Room,
-    peerConnection: RTCPeerConnection
+    peerConnection: RTCPeerConnection,
+    message: string
 ): Promise<boolean> {
 
     try {
+        pageElements.roomSetProgress(
+            room.id,
+            `${message}: checking for host...`,
+        );
         await signalling.hostGet(
             room,
-            'preparing'
+            message
         );
         if (room.remoteSessionDescription) {
             prepareDataChannel(room, peerConnection);
@@ -263,7 +256,7 @@ async function signalGuestOperations(
         room.remoteCandidates = [];
 
         if (room.localSessionDescription || room.localCandidates.length) {
-            await signalling.guestPost(room, 'waiting for ice connected');
+            await signalling.guestPost(room, message);
             room.localSessionDescription = '';
             room.localCandidates = [];
         }
@@ -280,24 +273,25 @@ async function signalGuestOperations(
 
 async function signalHostOperations(
     room: webrtcElements.Room,
-    peerConnection: RTCPeerConnection
+    peerConnection: RTCPeerConnection,
+    message: string
 ): Promise<boolean> {
     let final: boolean = false;
 
     if (room.localSessionDescription || room.localCandidates.length) {
-        await signalling.hostPost(room, 'waiting for ice connected');
+        await signalling.hostPost(room, message);
         room.localSessionDescription = '';
         room.localCandidates = [];
     }
 
     pageElements.roomSetProgress(
         room.id,
-        'checking for the guest'
+        `${message}: waiting for guest...`,
     );
 
     await signalling.guestGet(
         room,
-        'checking for the guest'
+        message
     );
 
     if (room.remoteSessionDescription) {
@@ -320,124 +314,14 @@ async function signalHostOperations(
 
 async function signalOperations(
     room: webrtcElements.Room,
-    peerConnection: RTCPeerConnection
+    peerConnection: RTCPeerConnection,
+    message: string
 ) {
     if (room.meetingType === webrtcElements.MeetingType.HOST) {
-        return await signalHostOperations(room, peerConnection);
+        return await signalHostOperations(room, peerConnection, message);
     } else {
-        return await signalGuestOperations(room, peerConnection);
+        return await signalGuestOperations(room, peerConnection, message);
     }
-}
-
-export async function signalLocalOperations(
-    room: webrtcElements.Room
-): Promise<boolean> {
-
-    try {
-        if (room.localSessionDescription || room.localCandidates.length) {
-            if (room.meetingType === webrtcElements.MeetingType.HOST) {
-                await signalling.hostPost(room, 'waiting for ice connected');
-            } else {
-                await signalling.guestPost(room, 'waiting for ice connected');
-            }
-            room.localSessionDescription = '';
-            room.localCandidates = [];
-        }
-    } catch (error) {
-        if (error instanceof webrtcElements.ControlledError) {
-            return true;
-        } else {
-            throw error;
-        }
-    }
-
-    return false;
-}
-
-export async function signalRemoteOperations(
-    room: webrtcElements.Room,
-    peerConnection: RTCPeerConnection
-): Promise<boolean> {
-    let final: boolean = false;
-
-    if (room.meetingType === webrtcElements.MeetingType.HOST) {
-        pageElements.roomSetProgress(
-            room.id,
-            'checking for the guest'
-        );
-        await signalling.guestGet(
-            room,
-            'checking for the guest'
-        );
-
-        if (room.remoteSessionDescription) {
-            await peerConnection.setRemoteDescription(
-                JSON.parse(atob(room.remoteSessionDescription))
-            );
-            final = true;
-        } else if (room.remoteCandidates.length) {
-            // for (const candidate of room.remoteCandidates) {
-            //     await peerConnection.addIceCandidate(
-            //         JSON.parse(atob(candidate))
-            //     );
-            // }
-        }
-    } else {
-        await signalling.hostGet(
-            room,
-            'preparing'
-        );
-        if (room.remoteSessionDescription) {
-            prepareDataChannel(room, peerConnection);
-
-            await peerConnection.setRemoteDescription(
-                JSON.parse(atob(room.remoteSessionDescription))
-            );
-
-            const answerDescription = await peerConnection.createAnswer();
-            peerConnection.setLocalDescription(answerDescription);
-        } else if (room.remoteCandidates.length) {
-            // for (const candidate of room.remoteCandidates) {
-            //     await peerConnection.addIceCandidate(
-            //         JSON.parse(atob(candidate))
-            //     );
-            // }
-        }
-
-        // pageElements.roomSetProgress(
-        //     room.id,
-        //     'collecting all ice candidates'
-        // );
-
-        // // const localSessionDescription = await waitForLocalDescription(room);
-
-        // const guestSignal =
-        //     await fetch(
-        //         'api/guest',
-        //         {
-        //             method: 'POST',
-        //             body: JSON.stringify({
-        //                 hostId: room.signalId,
-        //                 guestDescription: localSessionDescription
-        //             }),
-        //             headers: {
-        //                 'Content-type': 'application/json; charset=UTF-8'
-        //             }
-        //         }
-        //     );
-
-        // if (!guestSignal.ok) {
-        //     throw new webrtcElements.ControlledError('while trying to find the host');
-        // }
-
-        // //const _guestSignalJson =
-        // await guestSignal.json();
-    }
-
-    room.remoteSessionDescription = '';
-    room.remoteCandidates = [];
-
-    return final;
 }
 
 async function waitForIceConnected(
@@ -458,7 +342,7 @@ async function waitForIceConnected(
     ) {
         room.signallingComplete =
             room.signallingComplete ||
-            await signalOperations(room, peerConnection);
+            await signalOperations(room, peerConnection, 'connecting');
 
         await new Promise(resolve => setTimeout(resolve, stepWait));
 
@@ -484,7 +368,7 @@ async function waitForIceDisonnected(
     while (peerConnection.iceConnectionState === 'connected') {
         room.signallingComplete =
             room.signallingComplete ||
-            await signalOperations(room, peerConnection);
+            await signalOperations(room, peerConnection, 'connected');
 
         if (!room) {
             return;

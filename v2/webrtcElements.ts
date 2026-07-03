@@ -8,6 +8,7 @@ export class Room {
     meetingType: MeetingType|null = null;
     signalId: string = '';
     signalAccessKey: string = '';
+    signallingComplete: boolean = false;
     rooms: Map<string, Room>;
     peerConnections: Map<string, RTCPeerConnection> = new Map();
     localSessionDescription: string = '';

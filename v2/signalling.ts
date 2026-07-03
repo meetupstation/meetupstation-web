@@ -1,15 +1,5 @@
 import * as webrtcElements from './webrtcElements.js';
 
-export class HostHandle {
-    id: string;
-    accessKey: string;
-
-    constructor(id: string, accessKey: string) {
-        this.id = id;
-        this.accessKey = accessKey;
-    }
-};
-
 export async function hostPost(
     room: webrtcElements.Room,
     operationInfo: string

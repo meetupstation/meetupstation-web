@@ -329,7 +329,7 @@ async function signalOperations(
     }
 }
 
-async function signalLocalOperations(
+export async function signalLocalOperations(
     room: webrtcElements.Room
 ): Promise<boolean> {
 
@@ -354,7 +354,7 @@ async function signalLocalOperations(
     return false;
 }
 
-async function signalRemoteOperations(
+export async function signalRemoteOperations(
     room: webrtcElements.Room,
     peerConnection: RTCPeerConnection
 ): Promise<boolean> {

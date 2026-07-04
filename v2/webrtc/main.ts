@@ -1,6 +1,6 @@
-import * as pageElements from './pageElements.js';
-import * as webrtcElements from './webrtcElements.js';
-import * as signalling from './signalling.js';
+import * as pageElements from '../page/elements.js';
+import * as webrtcElements from './elements.js';
+import * as signalling from '../signalling.js';
 
 export async function meet(
     roomId: number,

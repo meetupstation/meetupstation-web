@@ -1,4 +1,4 @@
-import * as webrtcElements from './webrtcElements.js';
+import * as webrtcElements from './webrtc/elements.js';
 
 export async function hostPost(
     room: webrtcElements.Room,

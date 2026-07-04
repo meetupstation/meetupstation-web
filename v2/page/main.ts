@@ -1,6 +1,6 @@
-import * as webrtcElements from './webrtcElements.js';
-import * as webrtc from './webrtc.js';
-import * as pageElements from './pageElements.js';
+import * as webrtcElements from '../webrtc/elements.js';
+import * as webrtc from '../webrtc/main.js';
+import * as pageElements from './elements.js';
 
 const rooms: Map<string, webrtcElements.Room> = new Map();
 

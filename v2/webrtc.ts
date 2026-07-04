@@ -230,7 +230,7 @@ async function signalGuestOperations(
     try {
         pageElements.roomSetProgress(
             room.id,
-            `${message}: checking for host...`,
+            `${message}: checking for host...`
         );
         await signalling.hostGet(
             room,
@@ -286,7 +286,7 @@ async function signalHostOperations(
 
     pageElements.roomSetProgress(
         room.id,
-        `${message}: waiting for guest...`,
+        `${message}: waiting for guest...`
     );
 
     await signalling.guestGet(

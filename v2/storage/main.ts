@@ -53,6 +53,14 @@ export function loadSerialized(serialized: string): Storage {
                         }
                     }
 
+                    if (typeof(iceServer.username) === 'string') {
+                        iceServerNew.username = iceServer.username;
+                    }
+
+                    if (typeof(iceServer.credential) === 'string') {
+                        iceServerNew.credential = iceServer.credential;
+                    }
+
                     storage.rtcConfiguration.iceServers!.push(iceServerNew);
                 }
             }

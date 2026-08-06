@@ -50,6 +50,7 @@ export function load(): Storage {
                         if (typeof(iceServer.urls) === 'string') {
                             iceServerNew.urls = iceServer.urls;
                         } else if (Array.isArray(iceServer.urls)) {
+                            iceServerNew.urls = [];
                             for (const url of iceServer.urls) {
                                 if (typeof(url) === 'string') {
                                     iceServerNew.urls.push(url);

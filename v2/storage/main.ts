@@ -52,7 +52,7 @@ export function load(): Storage {
                         } else if (Array.isArray(iceServer.urls)) {
                             for (const url of iceServer.urls) {
                                 if (typeof(url) === 'string') {
-                                    iceServer.urls.push(url);
+                                    iceServerNew.urls.push(url);
                                 }
                             }
                         }

@@ -1,6 +1,7 @@
 import * as webrtcElements from '../webrtc/elements.js';
 import * as webrtc from '../webrtc/main.js';
 import * as pageElements from './elements.js';
+import * as storageController from '../storage/main.js';
 
 const rooms: Map<string, webrtcElements.Room> = new Map();
 
@@ -136,3 +137,5 @@ document.addEventListener('click', e => {
         roomTogglePlay(roomId, rooms, toggleButton);
     }
 });
+
+storageController.save(storageController.load());

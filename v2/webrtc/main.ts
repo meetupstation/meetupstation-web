@@ -1,6 +1,7 @@
 import * as pageElements from '../page/elements.js';
 import * as webrtcElements from './elements.js';
 import * as signalling from '../signalling.js';
+import * as storageController from '../storage/main.js';
 
 export async function meet(
     roomId: number,
@@ -126,11 +127,10 @@ async function initializePeerConnection(
     roomId: number,
     peerId: string
 ): Promise<RTCPeerConnection> {
-    const peerConnection = new RTCPeerConnection({
-        iceServers: [{
-            urls: 'stun:stun.l.google.com:19302'
-        }]
-    });
+
+    const storage = storageController.load();
+
+    const peerConnection = new RTCPeerConnection(storage.rtcConfiguration);
     // stun:stun.l.google.com:19302
     // stun:stun.stunprotocol.org
 

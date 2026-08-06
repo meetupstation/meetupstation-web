@@ -48,6 +48,46 @@ div.mainPane {
     flex-wrap: wrap;
 }
 
+div.sidePane {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+}
+
+div.settingsPane {
+    display: flex;
+    flex-direction: column;
+    width: 10rem;
+}
+
+div.settingsPane input[type=checkbox] {
+    opacity: 0;
+    height: 0;
+    width: 0;
+    margin: 0;
+    padding: 0;
+    display: none;
+}
+
+div.settingsPane input[type=checkbox]:checked+label {
+    filter: grayscale(1) saturate(3);
+    opacity: 1;
+    font-size: 1rem;
+}
+
+div.settingsPane input[type=checkbox]+label {
+    filter: grayscale(1) saturate(3);
+    opacity: 0.3;
+}
+
+div.settingsPane textarea {
+    display: none;
+}
+
+div.settingsPane input[type=checkbox]:checked+label+textarea {
+    display: flex;
+}
+
 div.roomsPane {
     display: flex;
     flex-direction: column;

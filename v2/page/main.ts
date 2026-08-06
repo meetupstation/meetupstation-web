@@ -5,6 +5,28 @@ import * as storageController from '../storage/main.js';
 
 const rooms: Map<string, webrtcElements.Room> = new Map();
 
+export function settingsToggle(self: HTMLInputElement): void {
+    const settingsText = document.querySelector<HTMLTextAreaElement>('#settings');
+
+    if (self.checked) {
+        try {
+            const storage = storageController.load();
+            settingsText!.value = storageController.saveSerialize(storage);
+        } catch (error) {
+            console.error('while loading settings:', error);
+            self.checked = false;
+        }
+    } else {
+        try {
+            const storage = storageController.loadSerialized(settingsText!.value);
+            storageController.save(storage);
+        } catch (error) {
+            console.error('while loading settings:', error);
+            self.checked = false;
+        }
+    }
+}
+
 export function newRoom(rooms: Map<string, webrtcElements.Room>): void {
     const nextRoomIdLabel = document.getElementById('nextRoomId');
 
@@ -123,6 +145,12 @@ export async function roomTogglePlay(
 
 document.getElementById('newRoom')!.addEventListener('click', () => {
     newRoom(rooms);
+});
+
+const settingsInputElement = document.querySelector<HTMLInputElement>('#settingsToggle');
+
+settingsInputElement!.addEventListener('click', (ev: MouseEvent) => {
+    settingsToggle(ev.currentTarget as HTMLInputElement);
 });
 
 document.addEventListener('click', e => {

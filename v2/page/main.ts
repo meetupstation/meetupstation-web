@@ -22,7 +22,7 @@ export function settingsToggle(self: HTMLInputElement): void {
             storageController.save(storage);
         } catch (error) {
             console.error('while loading settings:', error);
-            self.checked = false;
+            self.checked = true;
         }
     }
 }
@@ -147,9 +147,7 @@ document.getElementById('newRoom')!.addEventListener('click', () => {
     newRoom(rooms);
 });
 
-const settingsInputElement = document.querySelector<HTMLInputElement>('#settingsToggle');
-
-settingsInputElement!.addEventListener('click', (ev: MouseEvent) => {
+document.querySelector<HTMLInputElement>('#settingsToggle')!.addEventListener('click', (ev: MouseEvent) => {
     settingsToggle(ev.currentTarget as HTMLInputElement);
 });
 

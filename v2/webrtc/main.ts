@@ -259,9 +259,13 @@ async function signalGuestOperations(
             await signalling.guestPost(room, message);
             room.localSessionDescription = '';
             room.localCandidates = [];
+            room.signalAccessKey = '';
         }
     } catch (error) {
         if (error instanceof webrtcElements.ControlledError) {
+            room.localSessionDescription = '';
+            room.localCandidates = [];
+            room.signalAccessKey = '';
             return true;
         } else {
             throw error;
@@ -336,8 +340,7 @@ async function waitForIceConnected(
     while (
         [
             'new',
-            'checking',
-            'disconnected'
+            'checking'
         ].indexOf(peerConnection.iceConnectionState) !== -1
     ) {
         room.signallingComplete =

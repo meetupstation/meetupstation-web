@@ -1,0 +1,286 @@
+html {
+    font-size: 24px;
+    --universalMargin: 0.2rem;
+    --universalMarginEdge: 0.175rem;
+    --universalOpacity: 0.3;
+    scroll-behavior: smooth;
+    box-sizing: border-box;
+}
+*,
+*::before,
+*::after {
+    box-sizing: inherit;
+    font-size: inherit;
+}
+input[type=text] {
+    box-sizing: content-box;
+    margin: var(--universalMargin);
+    padding: var(--universalMargin);
+    border: 0;
+}
+textarea {
+    box-sizing: content-box;
+    margin: var(--universalMargin);
+    padding: var(--universalMargin);
+    border: 0;
+}
+
+@media screen and (max-aspect-ratio: 1/1) {
+    html {
+        font-size: 8vw;
+    }
+}
+
+body {
+    /* max-width: 100%;
+    overflow-x: hidden; */
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+    color: #333;
+    background-color: #f9f9f9;
+}
+
+header,
+footer {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+    background-color: #e8e8e8;
+    color: #333;
+    text-align: center;
+}
+
+header:has(input[type="checkbox"]:checked) div.textArea {
+    display: flex;
+    flex-direction: row;
+}
+
+div.textArea {
+    display: none;
+}
+
+div.textArea textarea {
+    width: 11.4rem;
+    font-size: 0.5rem;
+    margin-left: calc(2*var(--universalMarginEdge));
+    margin-right: calc(2*var(--universalMarginEdge));
+}
+
+div.headerControls {
+    display: flex;
+    flex-direction: row;
+}
+
+div.headerControls * {
+    margin: var(--universalMargin);
+    display: flex;
+    align-items: center;
+    width: 1rem;
+}
+
+div.headerControls input[type=checkbox]#settingsToggle {
+    opacity: 0;
+    height: 0;
+    width: 0;
+    display: none;
+}
+
+div.headerControls input[type=checkbox]#settingsToggle:checked+label::before {
+    opacity: var(--universalOpacity);
+}
+
+div.headerControls input[type=checkbox]#settingsToggle+label::before {
+    filter: grayscale(1) saturate(3);
+    content: "⚙";
+}
+div.headerControls input[type=checkbox]#settingsToggle+label {
+    margin-left: calc(2*var(--universalMarginEdge));
+}
+
+div.headerControls button#newRoomButton {
+    opacity: 0;
+    height: 0;
+    width: 0;
+    display: none;
+}
+
+div.headerControls button#newRoomButton+label::before {
+    filter: grayscale(1) saturate(3);
+    font-size: 0.7rem;
+    content: "➕";
+}
+
+div.headerControls button#newRoomButton:active+label {
+    opacity: calc(2*var(--universalOpacity));
+}
+
+div.headerControls div#nextRoomId {
+    opacity: 0;
+    height: 0;
+    width: 0;
+    display: none;
+}
+
+div.headerControls input[type=text] {
+    width: 8.6rem;
+    margin-right: calc(2*var(--universalMarginEdge));
+}
+
+label.hostId::before {
+    content: var(--vhostid);
+}
+
+label.hostId {
+    display: flex;
+    align-items: center;
+    margin: var(--universalMargin);
+    margin-left: calc(2*var(--universalMarginEdge));
+}
+
+body input[type=radio].roomRadio {
+    opacity: 0;
+    height: 0;
+    width: 0;
+    display: none;
+}
+
+body input[type=radio].roomRadio:checked+div label.hostId::before {
+    opacity: 1;
+}
+
+body input[type=radio].roomRadio+div label.hostId::before {
+    filter: grayscale(1) saturate(3);
+    opacity: var(--universalOpacity);
+}
+body input[type=radio].roomRadio+div label.hostId::before {
+    opacity: calc(2*var(--universalOpacity));
+}
+
+div.roomControls {
+    display: flex;
+    flex-direction: row;
+}
+
+div.roomControls * {
+    margin: var(--universalMargin);
+    display: flex;
+    align-items: center;
+    width: 1rem;
+}
+
+div.roomControls button.closeRoomButton {
+    opacity: 0;
+    height: 0;
+    width: 0;
+    display: none;
+}
+
+div.roomControls button.closeRoomButton+label::before {
+    filter: grayscale(1) saturate(3);
+    font-size: 0.7rem;
+    content: "❎";
+}
+
+div.roomControls button.closeRoomButton:active+label::before {
+    opacity: calc(2*var(--universalOpacity));
+}
+div.roomControls button.closeRoomButton+label {
+    margin-left: calc(2*var(--universalMarginEdge));
+}
+
+div.roomControls input[type=checkbox].playpauseToggle {
+    opacity: 0;
+    height: 0;
+    width: 0;
+    display: none;
+}
+
+div.roomControls input[type=checkbox].playpauseToggle:checked+label::before {
+    content: "⏸️";
+}
+
+div.roomControls input[type=checkbox].playpauseToggle+label::before {
+    filter: grayscale(1) saturate(3);
+    font-size: 0.7rem;
+    content: "▶️";
+}
+div.roomControls input[type=checkbox].playpauseToggle:active+label::before {
+    opacity: calc(2*var(--universalOpacity));
+}
+
+div.roomControls input[type=checkbox].cameraToggle {
+    opacity: 0;
+    height: 0;
+    width: 0;
+    display: none;
+}
+
+div.roomControls input[type=checkbox].cameraToggle:checked+label::before {
+    opacity: 1;
+}
+
+div.roomControls input[type=checkbox].cameraToggle+label::before {
+    filter: grayscale(1) saturate(3);
+    font-size: 0.7rem;
+    content: "🎦";
+    opacity: var(--universalOpacity);
+}
+
+div.roomControls input[type=checkbox].cameraToggle:active+label::before {
+    opacity: calc(2*var(--universalOpacity));
+}
+
+div.roomControls input[type=checkbox].micToggle {
+    opacity: 0;
+    height: 0;
+    width: 0;
+    display: none;
+}
+
+div.roomControls input[type=checkbox].micToggle:checked+label::before {
+    opacity: 1;
+}
+
+div.roomControls input[type=checkbox].micToggle+label::before {
+    filter: grayscale(1) saturate(3);
+    font-size: 0.7rem;
+    content: "🎧";
+    opacity: var(--universalOpacity);
+}
+
+div.roomControls input[type=checkbox].micToggle:active+label::before {
+    opacity: calc(2*var(--universalOpacity));
+}
+
+div.peers {
+    display: flex;
+    flex-wrap: wrap;
+    margin: var(--universalMargin);
+}
+
+div.statusWheel label {
+    opacity: calc(0.7 * min(1,max(0, (var(--vp) - var(--vc)))) + 0.3);
+    color: grey;
+    background: grey;
+    font-size: 0.1rem;
+}
+
+div.statusWheel {
+    width: 0.8rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    color: white;
+    background: white;
+
+    margin: var(--universalMargin);
+}
+
+div.errorMessage {
+    font-size: 0.5rem;
+    margin-left: calc(2*var(--universalMarginEdge));
+}

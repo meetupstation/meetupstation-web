@@ -1,0 +1,54 @@
+<html>
+<script type="module" src="page.js"></script>
+
+<head>
+    <title>Meetup Station</title>
+    <link rel="stylesheet" href="main.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
+</head>
+
+<header>
+        <div class="textarea">
+            <textarea id="settings" rows="10" cols="28"></textarea>
+        </div>
+        <div class="headerControls">
+            <input type="checkbox" id="settingsToggle">
+            <label for="settingsToggle"></label>
+            <button id="newRoomButton"></button>
+            <label for="newRoomButton"></label>
+            <input type='text' id='hostId'>
+        </div>
+</header>
+
+<body>
+    <template id="room-template">
+        <input type="radio" class="roomRadio" name="roomId" value="__" id="roomId__">
+        <div for="roomId__" class="room" style="--vhostid: ''; --vroomid: __">
+            <label for="roomId__" class="hostId"></label>
+            <div class="roomControls">
+                <button class="closeRoomButton" id="closeRoomButton__"></button>
+                <label for="closeRoomButton__"></label>
+                <input type="checkbox" class="playpauseToggle" id="playpauseToggle__">
+                <label for="playpauseToggle__"></label>
+                <input type="checkbox" class="cameraToggle" id="cameraToggle__" disabled>
+                <label for="cameraToggle__"></label>
+                <input type="checkbox" class="micToggle" id="micToggle__" disabled>
+                <label for="micToggle__"></label>
+            </div>
+            <div class="peers">
+            </div>
+            <div for="roomId__" class="errorMessage"></div>
+        </div>
+    </template>
+    <template id="peer-template">
+        <div class="statusWheel" style="--vp: 0; --vpeerconnectionid: __">
+            <label for="roomId__" style="--vc: 1"></label>
+            <label for="roomId__" style="--vc: 2"></label>
+            <label for="roomId__" style="--vc: 0"></label>
+            <label for="roomId__" style="--vc: 3"></label>
+        </div>
+    </template>
+</body>
+
+</html>

@@ -6,4 +6,10 @@ v2/page/elements.js
 v2/webrtc/main.js
 v2/webrtc/elements.js
 v2/signalling.js
+v3/common/page.js
+v3/common/signalling.js
+v3/common/webrtc.js
+v3/page.js
+v3/storage.js
+v3/webrtc.js
 node_modules

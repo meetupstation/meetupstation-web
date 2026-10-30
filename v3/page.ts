@@ -95,7 +95,7 @@ export async function roomToggleCamera(
     self: HTMLInputElement) {
     if (self.checked) {
         try {
-            webrtc.startCamera(roomId, rooms);
+            await webrtc.startCamera(roomId, rooms);
         } catch (error) {
             const message = String(error);
             pageElements.setErrorMessage(roomId, message);
@@ -109,7 +109,7 @@ export async function roomToggleMic(
     self: HTMLInputElement) {
     if (self.checked) {
         try {
-            webrtc.startMic(roomId, rooms);
+            await webrtc.startMic(roomId, rooms);
         } catch (error) {
             const message = String(error);
             pageElements.setErrorMessage(roomId, message);
@@ -118,7 +118,7 @@ export async function roomToggleMic(
     }
 }
 
-document.addEventListener('click', (event) => {
+document.addEventListener('click', async (event) => {
     const settingsToggleElement = (event.target as HTMLInputElement).closest('input#settingsToggle') as HTMLInputElement;
     if (settingsToggleElement) {
         settingsToggle(settingsToggleElement);
@@ -140,14 +140,14 @@ document.addEventListener('click', (event) => {
     if (cameraToggle) {
         const roomId = getComputedStyle(cameraToggle).getPropertyValue('--vroomid').trim();
         const roomIdNum = Number.parseInt(roomId);
-        roomToggleCamera(roomIdNum, cameraToggle);
+        await roomToggleCamera(roomIdNum, cameraToggle);
         return;
     }
     const micToggle = (event.target as HTMLInputElement).closest('input.micToggle') as HTMLInputElement;
     if (micToggle) {
         const roomId = getComputedStyle(micToggle).getPropertyValue('--vroomid').trim();
         const roomIdNum = Number.parseInt(roomId);
-        roomToggleMic(roomIdNum, micToggle);
+        await roomToggleMic(roomIdNum, micToggle);
         return;
     }
     const closeRoomButton = (event.target as HTMLButtonElement).closest('button.closeRoomButton');

@@ -13,7 +13,14 @@ export function newRoom(roomId: number): void {
     const templateRoomId = document.createElement('template');
     templateRoomId.innerHTML = html;
 
-    document.body.appendChild(templateRoomId.content.cloneNode(true));
+    const fragment = templateRoomId.content;
+    const radioElement = fragment.querySelector<HTMLInputElement>('.roomRadio');
+
+    if (radioElement) {
+        radioElement.checked = true;
+    }
+
+    document.body.appendChild(fragment.cloneNode(true));
 }
 
 export function deleteRoom(
@@ -45,7 +52,7 @@ export function setErrorMessage(roomId: number, error: string) {
         return getComputedStyle(item).getPropertyValue('--vroomid').trim() === `${roomId}`;
     });
     if (roomDiv) {
-        roomDiv.innerHTML = error;
+        roomDiv.textContent = error;
     }
 }
 
@@ -78,7 +85,7 @@ export function appendPeer(roomId: number, peerConnectionId: number) {
     roomDiv.appendChild(templatePeer.content.cloneNode(true));
 }
 
-export function setProgress(roomId: number,
+export function setPeerProgress(roomId: number,
     peerConnectionId: number,
     progress: number) {
 
@@ -89,6 +96,15 @@ export function setProgress(roomId: number,
     })!;
 
     peerDiv.style.setProperty('--vp', `${progress}`);
+}
+
+export function closePeer(roomId: number, peerConnectionId: number) {
+    const peerDivs = document.querySelectorAll<HTMLDivElement>('div.statusWheel');
+    const peerDiv = [...peerDivs].find((item) => {
+        return getComputedStyle(item).getPropertyValue('--vroomid').trim() === `${roomId}` &&
+        getComputedStyle(item).getPropertyValue('--vpeerconnectionid').trim() === `${peerConnectionId}`;
+    })!;
+    peerDiv.remove();
 }
 
 export function getHostId() {
@@ -119,4 +135,13 @@ export function setRoomHostId(roomId: number, hostId: string) {
             return getComputedStyle(item).getPropertyValue('--vroomid').trim() === `${roomId}`;
         })!;
     roomDiv.style.setProperty('--vhostid', JSON.stringify(hostId));
+}
+
+export function setCloseEnabled(roomId: number, enabled: boolean) {
+    const closeButtons = document.querySelectorAll<HTMLButtonElement>('button.closeRoomButton');
+    const closeButton = [...closeButtons].find(
+        (item) => {
+            return getComputedStyle(item).getPropertyValue('--vroomid').trim() === `${roomId}`;
+        })!;
+    closeButton.disabled = !enabled;
 }

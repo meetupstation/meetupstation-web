@@ -6,7 +6,7 @@ import * as storageController from './storage.js';
 const rooms: Map<string, webrtcElements.Room> = new Map();
 let nextRoomId = 0;
 
-export function newRoom(rooms: Map<string, webrtcElements.Room>): void {
+export function newRoom(rooms: Map<string, webrtcElements.Room>): number {
     const roomId = nextRoomId;
     ++nextRoomId;
 
@@ -20,23 +20,26 @@ export function newRoom(rooms: Map<string, webrtcElements.Room>): void {
 
     pageElements.newRoom(roomId);
     pageElements.setRoomHostId(roomId, hostId);
+
+    return roomId;
 }
 
 export function deleteRoom(
     roomId: number,
     rooms: Map<string, webrtcElements.Room>
 ): void {
-    const room = rooms.get(`${roomId}`);
-    if (room) {
-        // for (
-        //     const [_peerConnectionId, peerConnection] of
-        //     Object.entries(room.peerConnections)
-        // ) {
-        //     peerConnection.close();
-        // }
-        // room.peerConnections.clear();
-        rooms.delete(`${roomId}`);
+    const room = rooms.get(`${roomId}`)!;
+
+    const storage = storageController.load();
+    storage.rooms = storage.rooms.filter(item => item !== room.signalling.id);
+    storageController.save(storage);
+
+    for (const [_,peer] of room.peers) {
+        pageElements.closePeer(roomId, peer.connectionId);
+        peer.peerConnection.close();
     }
+    room.peers.clear();
+    rooms.delete(`${roomId}`);
 
     pageElements.deleteRoom(roomId);
 }
@@ -67,6 +70,7 @@ export async function roomTogglePlay(
 
     if (self.checked) {
         try {
+            pageElements.setCloseEnabled(roomId, false);
             pageElements.clearErrorMessage(roomId);
             const storage = storageController.load();
             await webrtc.meet(roomId,
@@ -76,9 +80,11 @@ export async function roomTogglePlay(
             const message = String(error);
             pageElements.setErrorMessage(roomId, message);
         }
+        pageElements.setCloseEnabled(roomId, true);
         self.disabled = false;
         self.checked = false;
     } else {
+        webrtc.interruptMeet(roomId, rooms);
         self.disabled = true;
         self.checked = true;
     }
@@ -111,4 +117,18 @@ document.addEventListener('click', (event) => {
     }
 });
 
-storageController.save(storageController.load());
+const storage = storageController.load();
+storageController.save(storage);
+
+for (const room of storage.rooms) {
+    pageElements.setHostId(room);
+    const roomId = newRoom(rooms);
+
+    const roomPlayInputs = document.querySelectorAll<HTMLInputElement>('input.playpauseToggle');
+    const roomPlayInput = [...roomPlayInputs].find((item) => {
+        return getComputedStyle(item).getPropertyValue('--vroomid').trim() === `${roomId}`;
+    })!;
+
+    roomPlayInput.checked = true;
+    roomTogglePlay(roomId, roomPlayInput);
+}

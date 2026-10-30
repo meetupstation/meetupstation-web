@@ -1,15 +1,17 @@
+<!DOCTYPE html>
 <html>
-<script type="module" src="page.js"></script>
 
 <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Meetup Station</title>
     <link rel="stylesheet" href="main.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta charset="UTF-8" />
+    <script type="module" src="page.js"></script>
 </head>
 
-<header>
-        <div class="textarea">
+<body>
+    <header>
+        <div class="textArea">
             <textarea id="settings" rows="10" cols="28"></textarea>
         </div>
         <div class="headerControls">
@@ -19,9 +21,7 @@
             <label for="newRoomButton"></label>
             <input type='text' id='hostId'>
         </div>
-</header>
-
-<body>
+    </header>
     <template id="room-template">
         <input type="radio" class="roomRadio" name="roomId" value="__" id="roomId__">
         <div for="roomId__" class="room" style="--vhostid: ''; --vroomid: __">

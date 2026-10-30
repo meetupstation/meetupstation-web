@@ -14,6 +14,7 @@ export class Peer {
 
 export class Room {
     id: number;
+    interruptMeet: boolean = false;
     signalling: signalling.SignallingScope;
     meetingType: signalling.MeetingType|null = null;
     peers: Map<number, Peer> = new Map();
@@ -113,46 +114,62 @@ export class Room {
         }
     }
 
-    async waitForIceConnected(peerConnection: RTCPeerConnection): Promise<void> {
+    async waitForIceConnected(peerConnection: RTCPeerConnection): Promise<boolean> {
         const stepWait = 200;
 
         const startTime = Date.now();
 
-        while (
-            [
-                'new',
-                'checking'
-            ].indexOf(peerConnection.iceConnectionState) !== -1
-        ) {
+        while ([
+            'new',
+            'checking'
+        ].indexOf(peerConnection.iceConnectionState) !== -1 &&
+        this.interruptMeet === false &&
+        Date.now() - startTime < 20_000) {
             await this.signalling.polling(peerConnection, this.meetingType!);
 
             await new Promise(resolve => setTimeout(resolve, stepWait));
-
-            if (Date.now() - startTime >= 20_000) {
-                throw new Error(`roomId: ${this.id} - ice connection time out`);
-            }
         }
 
-        if (peerConnection.iceConnectionState !== 'connected') {
-            throw new Error(`unexpected iceConnectionState (connected?) while waiting for ice connection: ${peerConnection.iceConnectionState}`);
+        if ([
+            'new',
+            'checking'
+        ].indexOf(peerConnection.iceConnectionState) !== -1) {
+            return false;
+        } else if ([
+            'connected',
+            'completed'
+        ].indexOf(peerConnection.iceConnectionState) === -1) {
+            throw new Error(`iceConnectionState: ${peerConnection.iceConnectionState} when expecting 'connected'`);
         }
+
+        return true;
     }
 
-    async waitForIceDisonnected(peerConnection: RTCPeerConnection): Promise<void> {
+    async waitForIceClosed(peerConnection: RTCPeerConnection): Promise<void> {
         const stepWait = 200;
 
-        while (peerConnection.iceConnectionState === 'connected') {
+        while ([
+            'connected',
+            'completed',
+            'disconnected'
+        ].indexOf(peerConnection.iceConnectionState) !== -1 &&
+            this.interruptMeet === false) {
             await this.signalling.polling(peerConnection, this.meetingType!);
 
             await new Promise(resolve => setTimeout(resolve, stepWait));
         }
 
-        if (peerConnection.iceConnectionState !== 'disconnected') {
-            throw new Error(`unexpected iceConnectionState (disconnected?) while waiting for ice connection: ${peerConnection.iceConnectionState}`);
+        if ([
+            'connected',
+            'completed',
+            'disconnected'
+        ].indexOf(peerConnection.iceConnectionState) !== -1) {
+            return;
+        } else if ([
+            'failed',
+            'closed'
+        ].indexOf(peerConnection.iceConnectionState) === -1) {
+            throw new Error(`iceConnectionState: ${peerConnection.iceConnectionState} when expecting 'closed'`);
         }
     }
-}
-
-export async function Sleep(milliSeconds: number) {
-    await new Promise(resolve => setTimeout(resolve, milliSeconds));
 }

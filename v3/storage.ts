@@ -20,9 +20,9 @@ export function loadSerialized(serialized: string): Storage {
         };
 
         switch (parsed.rtcConfiguration.iceTransportPolicy) {
-        case 'public':
-            storage.rtcConfiguration.iceTransportPolicy = parsed.rtcConfiguration.iceTransportPolicy;
-            break;
+        // case 'public': deprecated
+        //     storage.rtcConfiguration.iceTransportPolicy = parsed.rtcConfiguration.iceTransportPolicy;
+        //     break;
         case 'relay':
             storage.rtcConfiguration.iceTransportPolicy = parsed.rtcConfiguration.iceTransportPolicy;
             break;
@@ -41,7 +41,7 @@ export function loadSerialized(serialized: string): Storage {
                 } else if (Array.isArray(iceServer.urls)) {
                     iceServerNew.urls = [];
                     for (const url of iceServer.urls) {
-                        if (typeof(url) === 'string') {
+                        if (typeof(url) === 'string' && url) {
                             iceServerNew.urls.push(url);
                         }
                     }
@@ -55,7 +55,9 @@ export function loadSerialized(serialized: string): Storage {
                     iceServerNew.credential = iceServer.credential;
                 }
 
-                storage.rtcConfiguration.iceServers!.push(iceServerNew);
+                if (iceServerNew.urls.length) {
+                    storage.rtcConfiguration.iceServers!.push(iceServerNew);
+                }
             }
         }
     }
@@ -84,7 +86,7 @@ export function load(): Storage {
 
     if (storageParameter) {
         try {
-            const decoded = atob(storageParameter);
+            const decoded = new TextDecoder().decode(Uint8Array.fromBase64(storageParameter, { alphabet: 'base64url' }));
             return loadSerialized(decoded);
         } catch (error) {
             console.error('while parsing storage parameter:', error);
@@ -101,7 +103,7 @@ export function saveSerialize(storage: Storage): string {
 }
 
 export function save(storage: Storage): void {
-    const encoded = btoa(saveSerialize(storage));
+    const encoded = new TextEncoder().encode(saveSerialize(storage)).toBase64({ alphabet: 'base64url', omitPadding: true });
 
     const queryParams = new URLSearchParams(window.location.search);
     queryParams.set(parameterKey, encoded);

@@ -33,30 +33,45 @@ export class SignallingScope {
     }
 
     async hostPost(): Promise<void> {
-        const hostSignal = await fetch(
-            this.location('api/host'),
-            {
-                method: 'POST',
-                body: JSON.stringify({
-                    id: this.id,
-                    description: this.localSessionDescription,
-                    candidates: this.localCandidates,
-                    accessKey: this.accessKey
-                }),
-                headers: {
-                    'Content-type': 'application/json; charset=UTF-8'
+
+        const body = {
+            id: this.id,
+            description: this.localSessionDescription,
+            candidates: this.localCandidates,
+            accessKey: this.accessKey
+        };
+        this.localSessionDescription = '';
+        this.localCandidates = [];
+
+        try {
+            const hostSignal = await fetch(
+                this.location('api/host'),
+                {
+                    method: 'POST',
+                    body: JSON.stringify(body),
+                    headers: {
+                        'Content-type': 'application/json; charset=UTF-8'
+                    }
                 }
+            );
+
+            if (!hostSignal.ok) {
+                throw new Error('posting host signal: host is already in a call');
             }
-        );
 
-        if (!hostSignal.ok) {
-            throw new Error('posting host signal: host is already in a call');
+            const hostSignalJson = await hostSignal.json();
+
+            this.id = hostSignalJson.id;
+            this.accessKey = hostSignalJson.accessKey;
+        } catch (error) {
+            this.localSessionDescription = body.description || this.localSessionDescription;
+            const candidates = this.localCandidates;
+            this.localCandidates = body.candidates;
+            for (const candidate of candidates) {
+                this.localCandidates.push(candidate);
+            }
+            throw error;
         }
-
-        const hostSignalJson = await hostSignal.json();
-
-        this.id = hostSignalJson.id;
-        this.accessKey = hostSignalJson.accessKey;
     }
 
     async hostGet(): Promise<void> {
@@ -64,13 +79,9 @@ export class SignallingScope {
             return;
         }
 
+        const q = new URLSearchParams({ id: this.id, accessKey: this.accessKey });
         const hostSignal =
-            await fetch(
-                this.location(`api/host?id=${this.id}&accessKey=${this.accessKey}`),
-                {
-                    method: 'GET'
-                }
-            );
+            await fetch(this.location(`api/host?${q}`),{method: 'GET'});
         if (!hostSignal.ok) {
             this.complete = true;
             throw new Error('getting host signal: host not found or is already in a call');
@@ -84,31 +95,46 @@ export class SignallingScope {
     }
 
     async guestPost(): Promise<void> {
-        const guestSignal = await fetch(
-            this.location('api/guest'),
-            {
-                method: 'POST',
-                body: JSON.stringify({
-                    hostId: this.id,
-                    description: this.localSessionDescription,
-                    candidates: this.localCandidates,
-                    accessKey: this.accessKey
-                }),
-                headers: {
-                    'Content-type': 'application/json; charset=UTF-8'
+
+        const body = {
+            hostId: this.id,
+            description: this.localSessionDescription,
+            candidates: this.localCandidates,
+            accessKey: this.accessKey
+        };
+        this.localSessionDescription = '';
+        this.localCandidates = [];
+
+        try {
+            const guestSignal = await fetch(
+                this.location('api/guest'),
+                {
+                    method: 'POST',
+                    body: JSON.stringify(body),
+                    headers: {
+                        'Content-type': 'application/json; charset=UTF-8'
+                    }
                 }
+            );
+
+            if (!guestSignal.ok) {
+                this.complete = true;
+                throw new Error('posting guest signal: host not found or is already in a call');
             }
-        );
 
-        if (!guestSignal.ok) {
+            //const guestSignalJson =
+            await guestSignal.json();
+
             this.complete = true;
-            throw new Error('posting guest signal: host not found or is already in a call');
+        } catch (error) {
+            this.localSessionDescription = body.description || this.localSessionDescription;
+            const candidates = this.localCandidates;
+            this.localCandidates = body.candidates;
+            for (const candidate of candidates) {
+                this.localCandidates.push(candidate);
+            }
+            throw error;
         }
-
-        //const guestSignalJson =
-        await guestSignal.json();
-
-        this.complete = true;
     }
 
     async guestGet(): Promise<void> {
@@ -116,13 +142,9 @@ export class SignallingScope {
             return;
         }
 
+        const q = new URLSearchParams({ hostId: this.id, accessKey: this.accessKey });
         const guestSignal =
-            await fetch(
-                this.location(`api/guest?hostId=${this.id}&accessKey=${this.accessKey}`),
-                {
-                    method: 'GET'
-                }
-            );
+            await fetch(this.location(`api/guest?${q}`),{method: 'GET'});
         if (!guestSignal.ok) {
             throw new Error('getting guest signal: host not found or is already in a call');
         }
@@ -171,7 +193,7 @@ export class SignallingScope {
             );
 
             const answerDescription = await peerConnection.createAnswer();
-            peerConnection.setLocalDescription(answerDescription);
+            await peerConnection.setLocalDescription(answerDescription);
         } else if (this.remoteCandidates.length) {
             // for (const candidate of room.remoteCandidates) {
             //     await peerConnection.addIceCandidate(
@@ -184,8 +206,6 @@ export class SignallingScope {
 
         if (this.localSessionDescription || this.localCandidates.length) {
             await this.guestPost();
-            this.localSessionDescription = '';
-            this.localCandidates = [];
         }
     }
 
@@ -196,8 +216,6 @@ export class SignallingScope {
 
         if (this.localSessionDescription || this.localCandidates.length) {
             await this.hostPost();
-            this.localSessionDescription = '';
-            this.localCandidates = [];
         }
 
         await this.guestGet();

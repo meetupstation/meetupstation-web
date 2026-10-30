@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2023",
     "module": "ESNext",
-    "lib": ["ES2023", "DOM"],
+    "lib": ["ESNext", "DOM"],
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,

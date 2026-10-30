@@ -124,6 +124,7 @@ div.headerControls div#nextRoomId {
 
 div.headerControls input[type=text] {
     width: 8.6rem;
+    font-size: 0.9rem;
     margin-right: calc(2*var(--universalMarginEdge));
 }
 
@@ -185,6 +186,11 @@ div.roomControls button.closeRoomButton+label::before {
 div.roomControls button.closeRoomButton:active+label::before {
     opacity: calc(2*var(--universalOpacity));
 }
+
+div.roomControls button.closeRoomButton:disabled+label::before {
+    opacity: var(--universalOpacity);
+}
+
 div.roomControls button.closeRoomButton+label {
     margin-left: calc(2*var(--universalMarginEdge));
 }

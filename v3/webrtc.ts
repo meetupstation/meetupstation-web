@@ -102,7 +102,7 @@ export async function startCamera(roomId: number,
             (item) => {
                 return item.receiver.track.kind === 'video';
             })!;
-        transceiver.sender.replaceTrack(cameraTrack);
+        await transceiver.sender.replaceTrack(cameraTrack);
     }
 }
 
@@ -120,7 +120,7 @@ export async function startMic(roomId: number,
             (item) => {
                 return item.receiver.track.kind === 'audio';
             })!;
-        transceiver.sender.replaceTrack(micTrack);
+        await transceiver.sender.replaceTrack(micTrack);
     }
 }
 

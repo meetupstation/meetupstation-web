@@ -54,8 +54,17 @@ export class Room {
     }
 
     async setupTracksAndDataHandlers(peerConnection: RTCPeerConnection): Promise<void> {
-        peerConnection.addTransceiver('audio', { 'direction': 'sendrecv' });
-        peerConnection.addTransceiver('video', { 'direction': 'sendrecv' });
+        const localStream = new MediaStream();
+        peerConnection.addTransceiver('audio',
+            {
+                direction: 'sendrecv',
+                streams: [localStream]
+            });
+        peerConnection.addTransceiver('video',
+            {
+                direction:'sendrecv',
+                streams: [localStream]
+            });
 
         peerConnection.onicecandidate = (event) => {
             if (event.candidate === null) {
@@ -64,10 +73,6 @@ export class Room {
             } else {
                 this.signalling.localCandidates.push(btoa(JSON.stringify(event.candidate)));
             }
-        };
-
-        peerConnection.ontrack = function (event) {
-            console.log(event);
         };
     }
 

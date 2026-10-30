@@ -85,6 +85,17 @@ export function appendPeer(roomId: number, peerConnectionId: number) {
     roomDiv.appendChild(templatePeer.content.cloneNode(true));
 }
 
+export function closePeer(roomId: number, peerConnectionId: number) {
+    const peerDivs = document.querySelectorAll<HTMLDivElement>('div.statusWheel');
+    const peerDiv = [...peerDivs].find((item) => {
+        return getComputedStyle(item).getPropertyValue('--vroomid').trim() === `${roomId}` &&
+        getComputedStyle(item).getPropertyValue('--vpeerconnectionid').trim() === `${peerConnectionId}`;
+    })!;
+    peerDiv.remove();
+
+    closeMediaStreams(roomId, peerConnectionId);
+}
+
 export function setPeerProgress(roomId: number,
     peerConnectionId: number,
     progress: number) {
@@ -96,15 +107,6 @@ export function setPeerProgress(roomId: number,
     })!;
 
     peerDiv.style.setProperty('--vp', `${progress}`);
-}
-
-export function closePeer(roomId: number, peerConnectionId: number) {
-    const peerDivs = document.querySelectorAll<HTMLDivElement>('div.statusWheel');
-    const peerDiv = [...peerDivs].find((item) => {
-        return getComputedStyle(item).getPropertyValue('--vroomid').trim() === `${roomId}` &&
-        getComputedStyle(item).getPropertyValue('--vpeerconnectionid').trim() === `${peerConnectionId}`;
-    })!;
-    peerDiv.remove();
 }
 
 export function getHostId() {
@@ -160,4 +162,59 @@ export function setRoomMediaControlEnabled(roomId: number, enabled: boolean) {
             return getComputedStyle(item).getPropertyValue('--vroomid').trim() === `${roomId}`;
         })!;
     inputMic.disabled = !enabled;
+}
+
+export function setPeerMediaStream(roomId: number,
+    peerConnectionId: number,
+    stream: MediaStream) {
+    const roomDivs = document.querySelectorAll<HTMLDivElement>('div.media');
+    const roomDiv = [...roomDivs].find(
+        (item) => {
+            return getComputedStyle(item).getPropertyValue('--vroomid').trim() === `${roomId}`;
+        })!;
+
+    const peerMedias = roomDiv.querySelectorAll<HTMLDivElement>('div.peerMedia');
+    const peerMedia = [...peerMedias].find(
+        (item) => {
+            return getComputedStyle(item).getPropertyValue('--vpeerconnectionid').trim() === `${peerConnectionId}` &&
+            getComputedStyle(item).getPropertyValue('--vstreamid').trim() === `${stream.id}`;
+        });
+
+    if (!peerMedia) {
+        const template = document.getElementById('peer-media-template') as HTMLTemplateElement;
+
+        const html = template!.innerHTML
+            .replaceAll('roomId__', `roomId${roomId}`) // useless currently
+            .replaceAll('--vpeerconnectionid: __', `--vpeerconnectionid: ${peerConnectionId}`)
+            .replaceAll('--vstreamid: __', `--vstreamid: ${stream.id}`);
+
+        const templatePeer = document.createElement('template');
+        templatePeer.innerHTML = html;
+
+        roomDiv.appendChild(templatePeer.content.cloneNode(true));
+    }
+
+    const peerVideos = roomDiv.querySelectorAll<HTMLVideoElement>('video');
+    const peerVideo = [...peerVideos].find(
+        (item) => {
+            return getComputedStyle(item).getPropertyValue('--vpeerconnectionid').trim() === `${peerConnectionId}` &&
+            getComputedStyle(item).getPropertyValue('--vstreamid').trim() === `${stream.id}`;
+        })!;
+
+    peerVideo.srcObject = stream;
+}
+
+export function closeMediaStreams(roomId: number, peerConnectionId: number) {
+
+    const roomDivs = document.querySelectorAll<HTMLDivElement>('div.media');
+    const roomDiv = [...roomDivs].find(
+        (item) => {
+            return getComputedStyle(item).getPropertyValue('--vroomid').trim() === `${roomId}`;
+        })!;
+    const peerMedias = roomDiv.querySelectorAll<HTMLDivElement>('div.peerMedia');
+    for (const peerMedia of peerMedias) {
+        if (getComputedStyle(peerMedia).getPropertyValue('--vpeerconnectionid').trim() === `${peerConnectionId}`) {
+            peerMedia.remove();
+        }
+    }
 }

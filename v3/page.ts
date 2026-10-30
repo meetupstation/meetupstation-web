@@ -90,6 +90,34 @@ export async function roomTogglePlay(
     }
 }
 
+export async function roomToggleCamera(
+    roomId: number,
+    self: HTMLInputElement) {
+    if (self.checked) {
+        try {
+            webrtc.startCamera(roomId, rooms);
+        } catch (error) {
+            const message = String(error);
+            pageElements.setErrorMessage(roomId, message);
+            self.checked = false;
+        }
+    }
+}
+
+export async function roomToggleMic(
+    roomId: number,
+    self: HTMLInputElement) {
+    if (self.checked) {
+        try {
+            webrtc.startMic(roomId, rooms);
+        } catch (error) {
+            const message = String(error);
+            pageElements.setErrorMessage(roomId, message);
+            self.checked = false;
+        }
+    }
+}
+
 document.addEventListener('click', (event) => {
     const settingsToggleElement = (event.target as HTMLInputElement).closest('input#settingsToggle') as HTMLInputElement;
     if (settingsToggleElement) {
@@ -106,6 +134,20 @@ document.addEventListener('click', (event) => {
         const roomId = getComputedStyle(playPauseToggle).getPropertyValue('--vroomid').trim();
         const roomIdNum = Number.parseInt(roomId);
         roomTogglePlay(roomIdNum, playPauseToggle);
+        return;
+    }
+    const cameraToggle = (event.target as HTMLInputElement).closest('input.cameraToggle') as HTMLInputElement;
+    if (cameraToggle) {
+        const roomId = getComputedStyle(cameraToggle).getPropertyValue('--vroomid').trim();
+        const roomIdNum = Number.parseInt(roomId);
+        roomToggleCamera(roomIdNum, cameraToggle);
+        return;
+    }
+    const micToggle = (event.target as HTMLInputElement).closest('input.micToggle') as HTMLInputElement;
+    if (micToggle) {
+        const roomId = getComputedStyle(micToggle).getPropertyValue('--vroomid').trim();
+        const roomIdNum = Number.parseInt(roomId);
+        roomToggleMic(roomIdNum, micToggle);
         return;
     }
     const closeRoomButton = (event.target as HTMLButtonElement).closest('button.closeRoomButton');

@@ -54,18 +54,6 @@ export class Room {
     }
 
     async setupTracksAndDataHandlers(peerConnection: RTCPeerConnection): Promise<void> {
-        // const media = await pageElements.getUserMedia(room.id);
-        // if (media.stream) {
-        //     for (const track of media.stream.getTracks()) {
-        //         peerConnection.addTrack(track, media.stream);
-        //     }
-
-        //     pageElements.roomSetLocalVideoStream(
-        //         room.id,
-        //         media.stream
-        //     );
-        // }
-
         peerConnection.addTransceiver('audio', { 'direction': 'sendrecv' });
         peerConnection.addTransceiver('video', { 'direction': 'sendrecv' });
 

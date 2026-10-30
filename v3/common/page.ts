@@ -145,3 +145,19 @@ export function setCloseEnabled(roomId: number, enabled: boolean) {
         })!;
     closeButton.disabled = !enabled;
 }
+
+export function setRoomMediaControlEnabled(roomId: number, enabled: boolean) {
+    const inputCameras = document.querySelectorAll<HTMLInputElement>('input.cameraToggle');
+    const inputCamera = [...inputCameras].find(
+        (item) => {
+            return getComputedStyle(item).getPropertyValue('--vroomid').trim() === `${roomId}`;
+        })!;
+    inputCamera.disabled = !enabled;
+
+    const inputMics = document.querySelectorAll<HTMLInputElement>('input.micToggle');
+    const inputMic = [...inputMics].find(
+        (item) => {
+            return getComputedStyle(item).getPropertyValue('--vroomid').trim() === `${roomId}`;
+        })!;
+    inputMic.disabled = !enabled;
+}

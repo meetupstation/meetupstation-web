@@ -222,19 +222,23 @@ div.roomControls input[type=checkbox].cameraToggle {
     display: none;
 }
 
-div.roomControls input[type=checkbox].cameraToggle:checked+label::before {
-    opacity: 1;
-}
-
 div.roomControls input[type=checkbox].cameraToggle+label::before {
     filter: grayscale(1) saturate(3);
     font-size: 0.7rem;
     content: "🎦";
+    opacity: 1;
+}
+
+div.roomControls input[type=checkbox].cameraToggle:not(:checked)+label::before {
+    opacity: calc(2*var(--universalOpacity));
+}
+
+div.roomControls input[type=checkbox].cameraToggle:disabled+label::before {
     opacity: var(--universalOpacity);
 }
 
 div.roomControls input[type=checkbox].cameraToggle:active+label::before {
-    opacity: calc(2*var(--universalOpacity));
+    opacity: var(--universalOpacity);
 }
 
 div.roomControls input[type=checkbox].micToggle {
@@ -244,19 +248,23 @@ div.roomControls input[type=checkbox].micToggle {
     display: none;
 }
 
-div.roomControls input[type=checkbox].micToggle:checked+label::before {
-    opacity: 1;
-}
-
 div.roomControls input[type=checkbox].micToggle+label::before {
     filter: grayscale(1) saturate(3);
     font-size: 0.7rem;
     content: "🎧";
+    opacity: 1;
+}
+
+div.roomControls input[type=checkbox].micToggle:not(:checked)+label::before {
+    opacity: calc(2*var(--universalOpacity));
+}
+
+div.roomControls input[type=checkbox].micToggle:disabled+label::before {
     opacity: var(--universalOpacity);
 }
 
 div.roomControls input[type=checkbox].micToggle:active+label::before {
-    opacity: calc(2*var(--universalOpacity));
+    opacity: var(--universalOpacity);
 }
 
 div.peers {

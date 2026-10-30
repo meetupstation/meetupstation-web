@@ -71,7 +71,9 @@ export async function meet(
 
         if (await room.waitForIceConnected(peer.peerConnection)) {
             pageElements.setPeerProgress(room.id, peerConnectionId, 4);
+            pageElements.setRoomMediaControlEnabled(room.id, true);
         }
+
         if (room.interruptMeet) {
             return;
         }
@@ -84,6 +86,42 @@ export function interruptMeet(
 ): void {
     const room = rooms.get(`${roomId}`)!;
     room.interruptMeet = true;
+}
+
+export async function startCamera(roomId: number,
+    rooms: Map<string, webrtcElements.Room>) {
+
+    const room = rooms.get(`${roomId}`)!;
+
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const cameraTrack = stream.getVideoTracks()[0];
+
+    for (const [_, peer] of room.peers) {
+        const transceivers = peer.peerConnection.getTransceivers();
+        const transceiver = transceivers.find(
+            (item) => {
+                return item.receiver.track.kind === 'video';
+            })!;
+        transceiver.sender.replaceTrack(cameraTrack);
+    }
+}
+
+export async function startMic(roomId: number,
+    rooms: Map<string, webrtcElements.Room>) {
+
+    const room = rooms.get(`${roomId}`)!;
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const micTrack = stream.getAudioTracks()[0];
+
+    for (const [_, peer] of room.peers) {
+        const transceivers = peer.peerConnection.getTransceivers();
+        const transceiver = transceivers.find(
+            (item) => {
+                return item.receiver.track.kind === 'audio';
+            })!;
+        transceiver.sender.replaceTrack(micTrack);
+    }
 }
 
 export function closePeer(roomId: number,

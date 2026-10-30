@@ -65,6 +65,10 @@ export class Room {
                 this.signalling.localCandidates.push(btoa(JSON.stringify(event.candidate)));
             }
         };
+
+        peerConnection.ontrack = function (event) {
+            console.log(event);
+        };
     }
 
     async ifHostPrepareOffer(peerConnection: RTCPeerConnection): Promise<void> {

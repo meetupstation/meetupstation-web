@@ -65,15 +65,6 @@ export class Room {
                 direction:'sendrecv',
                 streams: [localStream]
             });
-
-        peerConnection.onicecandidate = (event) => {
-            if (event.candidate === null) {
-                this.signalling.localSessionDescription =
-                btoa(JSON.stringify(peerConnection.localDescription));
-            } else {
-                this.signalling.localCandidates.push(btoa(JSON.stringify(event.candidate)));
-            }
-        };
     }
 
     async ifHostPrepareOffer(peerConnection: RTCPeerConnection): Promise<void> {
@@ -102,6 +93,8 @@ export class Room {
             })(this.meetingType);
 
         if (this.meetingType === signalling.MeetingType.HOST) {
+            await this.setupTracksAndDataHandlers(peerConnection);
+
             await this.signalling.hostPost();
 
             const offer = await peerConnection.createOffer();

@@ -192,6 +192,12 @@ export class SignallingScope {
                 JSON.parse(atob(this.remoteSessionDescription))
             );
 
+            const localStream = new MediaStream();
+            for (const transceiver of peerConnection.getTransceivers()) {
+                transceiver.direction = 'sendrecv';
+                transceiver.sender.setStreams(localStream);
+            }
+
             const answerDescription = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answerDescription);
         } else if (this.remoteCandidates.length) {

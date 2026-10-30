@@ -59,7 +59,29 @@ export async function meet(
         pageElements.setPeerProgress(room.id, peerConnectionId, 1);
 
         const peer = room.getPeer(peerConnectionId);
-        await setupTracksAndDataHandlers(room.id, rooms, peerConnectionId);
+
+        peer.peerConnection.ontrack = function (event) {
+        // const track = event.track;
+            const stream = event.streams[0];
+
+            pageElements.setPeerMediaStream(room.id, peerConnectionId, stream);
+            // pageElements.setRemoteStream(roomId, peerConnectionId, stream);
+            // pageElements.setRemoteVisible(roomId, peerConnectionId, track.kind, !track.muted);
+
+        // track.addEventListener('unmute', () =>
+        //     pageElements.setRemoteVisible(this.id, peerConnectionId, track.kind, true));
+        // track.addEventListener('mute', () =>
+        //     pageElements.setRemoteVisible(this.id, peerConnectionId, track.kind, false));
+        };
+        peer.peerConnection.onicecandidate = (event) => {
+            if (event.candidate === null) {
+                room.signalling.localSessionDescription =
+                        btoa(JSON.stringify(peer.peerConnection.localDescription));
+            } else {
+                room.signalling.localCandidates.push(btoa(JSON.stringify(event.candidate)));
+            }
+        };
+
         await room.ifHostPrepareOffer(peer.peerConnection);
 
         const storage = storageController.load();
@@ -122,31 +144,6 @@ export async function startMic(roomId: number,
             })!;
         await transceiver.sender.replaceTrack(micTrack);
     }
-}
-
-export async function setupTracksAndDataHandlers(
-    roomId: number,
-    rooms: Map<string, webrtcElements.Room>,
-    peerConnectionId: number): Promise<void> {
-
-    const room = rooms.get(`${roomId}`)!;
-    const peer = room.getPeer(peerConnectionId);
-
-    room.setupTracksAndDataHandlers(peer.peerConnection);
-
-    peer.peerConnection.ontrack = function (event) {
-        // const track = event.track;
-        const stream = event.streams[0];
-
-        pageElements.setPeerMediaStream(room.id, peerConnectionId, stream);
-        // pageElements.setRemoteStream(roomId, peerConnectionId, stream);
-        // pageElements.setRemoteVisible(roomId, peerConnectionId, track.kind, !track.muted);
-
-        // track.addEventListener('unmute', () =>
-        //     pageElements.setRemoteVisible(this.id, peerConnectionId, track.kind, true));
-        // track.addEventListener('mute', () =>
-        //     pageElements.setRemoteVisible(this.id, peerConnectionId, track.kind, false));
-    };
 }
 
 export function closePeer(roomId: number,

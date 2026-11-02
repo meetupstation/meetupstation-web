@@ -124,8 +124,6 @@ export class SignallingScope {
 
             //const guestSignalJson =
             await guestSignal.json();
-
-            this.complete = true;
         } catch (error) {
             this.localSessionDescription = body.description || this.localSessionDescription;
             const candidates = this.localCandidates;
@@ -206,14 +204,14 @@ export class SignallingScope {
             await peerConnection.setLocalDescription(answerDescription);
 
             this.localSessionDescription = btoa(JSON.stringify(peerConnection.localDescription));
-            peerConnection.onicecandidate = (event) => {
-                if (event.candidate === null) {
-                    this.localSessionDescription =
-                            btoa(JSON.stringify(peerConnection.localDescription));
-                } else {
-                    this.localCandidates.push(btoa(JSON.stringify(event.candidate)));
-                }
-            };
+            // peerConnection.onicecandidate = (event) => {
+            //     if (event.candidate === null) {
+            //         this.localSessionDescription =
+            //                 btoa(JSON.stringify(peerConnection.localDescription));
+            //     } else {
+            //         this.localCandidates.push(btoa(JSON.stringify(event.candidate)));
+            //     }
+            // };
         }
 
         if (peerConnection.remoteDescription && // otherwise addIceCandidate throws

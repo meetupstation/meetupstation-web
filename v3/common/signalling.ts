@@ -206,7 +206,9 @@ export class SignallingScope {
             await peerConnection.setLocalDescription(answerDescription);
 
             this.localSessionDescription = btoa(JSON.stringify(peerConnection.localDescription));
-        } else if (peerConnection.remoteDescription && // this seems to make sure that answer has already been prepared
+        }
+
+        if (peerConnection.remoteDescription && // otherwise addIceCandidate throws
             this.remoteCandidates.length) {
             const remoteCandidates = this.remoteCandidates;
             this.remoteCandidates = [];
@@ -240,7 +242,8 @@ export class SignallingScope {
             await peerConnection.setRemoteDescription(
                 JSON.parse(atob(remoteSessionDescription))
             );
-        } else if (this.remoteCandidates.length) {
+        } else if (peerConnection.remoteDescription && // otherwise addIceCandidate throws
+            this.remoteCandidates.length) {
             const remoteCandidates = this.remoteCandidates;
             this.remoteCandidates = [];
 

@@ -84,7 +84,7 @@ export class SignallingScope {
             await fetch(this.location(`api/host?${q}`),{method: 'GET'});
         if (!hostSignal.ok) {
             this.complete = true;
-            throw new Error('getting host signal: room not found or is already being negotiated at the moment');
+            throw new Error('getting host signal: room is not found or already being negotiated at the moment');
         }
 
         const hostSignalJson = await hostSignal.json();
@@ -119,7 +119,7 @@ export class SignallingScope {
 
             if (!guestSignal.ok) {
                 this.complete = true;
-                throw new Error('posting guest signal: room not found or is already being negotiated at the moment');
+                throw new Error('posting guest signal: room is not found or already being negotiated at the moment');
             }
 
             //const guestSignalJson =
@@ -144,7 +144,7 @@ export class SignallingScope {
         const guestSignal =
             await fetch(this.location(`api/guest?${q}`),{method: 'GET'});
         if (!guestSignal.ok) {
-            throw new Error('getting guest signal: room not found or is already being negotiated at the moment');
+            throw new Error('getting guest signal: room is not found or already being negotiated at the moment');
         }
 
         const guestSignalJson = await guestSignal.json();
@@ -247,7 +247,9 @@ export class SignallingScope {
                     JSON.parse(atob(remoteSessionDescription))
                 );
             }
-        } else if (this.remoteCandidates.length) {
+        }
+
+        if (this.remoteCandidates.length) {
             const remoteCandidates = this.remoteCandidates;
             this.remoteCandidates = [];
 

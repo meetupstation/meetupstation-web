@@ -116,7 +116,7 @@ export class Room {
             'checking'
         ].indexOf(peerConnection.iceConnectionState) !== -1 &&
         this.interruptMeet === false &&
-        Date.now() - startTime < 100_000) {
+        Date.now() - startTime < 20_000) {
             await this.signalling.polling(peerConnection, this.meetingType!);
 
             await new Promise(resolve => setTimeout(resolve, stepWait));

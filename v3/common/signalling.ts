@@ -190,37 +190,33 @@ export class SignallingScope {
 
             const remoteSessionDescription = this.remoteSessionDescription;
             this.remoteSessionDescription = '';
-            await peerConnection.setRemoteDescription(
-                JSON.parse(atob(remoteSessionDescription))
-            );
 
-            const localStream = new MediaStream();
-            for (const transceiver of peerConnection.getTransceivers()) {
-                transceiver.direction = 'sendrecv';
-                transceiver.sender.setStreams(localStream);
+            if (!peerConnection.remoteDescription) {
+                await peerConnection.setRemoteDescription(
+                    JSON.parse(atob(remoteSessionDescription))
+                );
+
+                const localStream = new MediaStream();
+                for (const transceiver of peerConnection.getTransceivers()) {
+                    transceiver.direction = 'sendrecv';
+                    transceiver.sender.setStreams(localStream);
+                }
+
+                const answerDescription = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answerDescription);
+
+                this.localSessionDescription = btoa(JSON.stringify(peerConnection.localDescription));
             }
-
-            const answerDescription = await peerConnection.createAnswer();
-            await peerConnection.setLocalDescription(answerDescription);
-
-            this.localSessionDescription = btoa(JSON.stringify(peerConnection.localDescription));
-            // peerConnection.onicecandidate = (event) => {
-            //     if (event.candidate === null) {
-            //         this.localSessionDescription =
-            //                 btoa(JSON.stringify(peerConnection.localDescription));
-            //     } else {
-            //         this.localCandidates.push(btoa(JSON.stringify(event.candidate)));
-            //     }
-            // };
         }
 
-        if (peerConnection.remoteDescription && // otherwise addIceCandidate throws
-            this.remoteCandidates.length) {
+        if (this.remoteCandidates.length) {
             const remoteCandidates = this.remoteCandidates;
             this.remoteCandidates = [];
 
-            for (const candidate of remoteCandidates) {
-                await peerConnection.addIceCandidate(JSON.parse(atob(candidate)));
+            if (peerConnection.remoteDescription) {
+                for (const candidate of remoteCandidates) {
+                    await peerConnection.addIceCandidate(JSON.parse(atob(candidate)));
+                }
             }
         }
 
@@ -245,16 +241,20 @@ export class SignallingScope {
         if (this.remoteSessionDescription) {
             const remoteSessionDescription = this.remoteSessionDescription;
             this.remoteSessionDescription = '';
-            await peerConnection.setRemoteDescription(
-                JSON.parse(atob(remoteSessionDescription))
-            );
-        } else if (peerConnection.remoteDescription && // otherwise addIceCandidate throws
-            this.remoteCandidates.length) {
+
+            if (!peerConnection.remoteDescription) {
+                await peerConnection.setRemoteDescription(
+                    JSON.parse(atob(remoteSessionDescription))
+                );
+            }
+        } else if (this.remoteCandidates.length) {
             const remoteCandidates = this.remoteCandidates;
             this.remoteCandidates = [];
 
-            for (const candidate of remoteCandidates) {
-                await peerConnection.addIceCandidate(JSON.parse(atob(candidate)));
+            if (peerConnection.remoteDescription) {
+                for (const candidate of remoteCandidates) {
+                    await peerConnection.addIceCandidate(JSON.parse(atob(candidate)));
+                }
             }
         }
     }

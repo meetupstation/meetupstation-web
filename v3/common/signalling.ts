@@ -14,8 +14,8 @@ export class SignallingScope {
     remoteSessionDescription: string = '';
     remoteCandidates: string[] = [];
 
-    constructor(hostId: string, server: string) {
-        this.id = hostId;
+    constructor(id: string, server: string) {
+        this.id = id;
         this.accessKey = '';
         this.server = server;
     }
@@ -56,7 +56,7 @@ export class SignallingScope {
             );
 
             if (!hostSignal.ok) {
-                throw new Error('posting host signal: host is already in a call');
+                throw new Error('posting host signal: room is already being negotiated at the moment');
             }
 
             const hostSignalJson = await hostSignal.json();
@@ -84,7 +84,7 @@ export class SignallingScope {
             await fetch(this.location(`api/host?${q}`),{method: 'GET'});
         if (!hostSignal.ok) {
             this.complete = true;
-            throw new Error('getting host signal: host not found or is already in a call');
+            throw new Error('getting host signal: room not found or is already being negotiated at the moment');
         }
 
         const hostSignalJson = await hostSignal.json();
@@ -97,7 +97,7 @@ export class SignallingScope {
     async guestPost(): Promise<void> {
 
         const body = {
-            hostId: this.id,
+            id: this.id,
             description: this.localSessionDescription,
             candidates: this.localCandidates,
             accessKey: this.accessKey
@@ -119,7 +119,7 @@ export class SignallingScope {
 
             if (!guestSignal.ok) {
                 this.complete = true;
-                throw new Error('posting guest signal: host not found or is already in a call');
+                throw new Error('posting guest signal: room not found or is already being negotiated at the moment');
             }
 
             //const guestSignalJson =
@@ -142,11 +142,11 @@ export class SignallingScope {
             return;
         }
 
-        const q = new URLSearchParams({ hostId: this.id, accessKey: this.accessKey });
+        const q = new URLSearchParams({ id: this.id, accessKey: this.accessKey });
         const guestSignal =
             await fetch(this.location(`api/guest?${q}`),{method: 'GET'});
         if (!guestSignal.ok) {
-            throw new Error('getting guest signal: host not found or is already in a call');
+            throw new Error('getting guest signal: room not found or is already being negotiated at the moment');
         }
 
         const guestSignalJson = await guestSignal.json();
@@ -178,7 +178,9 @@ export class SignallingScope {
             await this.hostGet();
         } catch (error) {
             if (this.complete) {
-                this.complete = false;
+                if (!this.accessKey) {
+                    this.complete = false;
+                }
                 return;
             } else {
                 throw error;
@@ -188,8 +190,10 @@ export class SignallingScope {
         if (this.remoteSessionDescription) {
             // prepareDataChannel(room, peerConnection);
 
+            const remoteSessionDescription = this.remoteSessionDescription;
+            this.remoteSessionDescription = '';
             await peerConnection.setRemoteDescription(
-                JSON.parse(atob(this.remoteSessionDescription))
+                JSON.parse(atob(remoteSessionDescription))
             );
 
             const localStream = new MediaStream();
@@ -200,15 +204,17 @@ export class SignallingScope {
 
             const answerDescription = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answerDescription);
-        } else if (this.remoteCandidates.length) {
-            // for (const candidate of room.remoteCandidates) {
-            //     await peerConnection.addIceCandidate(
-            //         JSON.parse(atob(candidate))
-            //     );
-            // }
+
+            this.localSessionDescription = btoa(JSON.stringify(peerConnection.localDescription));
+        } else if (peerConnection.remoteDescription && // this seems to make sure that answer has already been prepared
+            this.remoteCandidates.length) {
+            const remoteCandidates = this.remoteCandidates;
+            this.remoteCandidates = [];
+
+            for (const candidate of remoteCandidates) {
+                await peerConnection.addIceCandidate(JSON.parse(atob(candidate)));
+            }
         }
-        this.remoteSessionDescription = '';
-        this.remoteCandidates = [];
 
         if (this.localSessionDescription || this.localCandidates.length) {
             await this.guestPost();
@@ -217,6 +223,8 @@ export class SignallingScope {
 
     async hostPolling(peerConnection: RTCPeerConnection): Promise<void> {
         if (this.complete) {
+            // does not seem to happen
+            // just does not poll after connected
             return;
         }
 
@@ -227,18 +235,18 @@ export class SignallingScope {
         await this.guestGet();
 
         if (this.remoteSessionDescription) {
+            const remoteSessionDescription = this.remoteSessionDescription;
+            this.remoteSessionDescription = '';
             await peerConnection.setRemoteDescription(
-                JSON.parse(atob(this.remoteSessionDescription))
+                JSON.parse(atob(remoteSessionDescription))
             );
-            this.complete = true;
         } else if (this.remoteCandidates.length) {
-            // for (const candidate of room.remoteCandidates) {
-            //     await peerConnection.addIceCandidate(
-            //         JSON.parse(atob(candidate))
-            //     );
-            // }
+            const remoteCandidates = this.remoteCandidates;
+            this.remoteCandidates = [];
+
+            for (const candidate of remoteCandidates) {
+                await peerConnection.addIceCandidate(JSON.parse(atob(candidate)));
+            }
         }
-        this.remoteSessionDescription = '';
-        this.remoteCandidates = [];
     }
 }

@@ -100,6 +100,8 @@ export class Room {
             const offer = await peerConnection.createOffer();
 
             await peerConnection.setLocalDescription(offer);
+            this.signalling.localSessionDescription =
+                btoa(JSON.stringify(peerConnection.localDescription));
         } else /*if (room.meetingType === webrtcElements.MeetingType.GUEST) */{
         }
     }
@@ -114,7 +116,7 @@ export class Room {
             'checking'
         ].indexOf(peerConnection.iceConnectionState) !== -1 &&
         this.interruptMeet === false &&
-        Date.now() - startTime < 20_000) {
+        Date.now() - startTime < 100_000) {
             await this.signalling.polling(peerConnection, this.meetingType!);
 
             await new Promise(resolve => setTimeout(resolve, stepWait));

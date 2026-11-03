@@ -75,7 +75,7 @@ export class SignallingScope {
     }
 
     async hostGet(): Promise<void> {
-        if (this.remoteSessionDescription || this.remoteCandidates.length) {
+        if (this.remoteSessionDescription) {
             return;
         }
 
@@ -90,7 +90,7 @@ export class SignallingScope {
         const hostSignalJson = await hostSignal.json();
 
         this.remoteSessionDescription = hostSignalJson.description;
-        this.remoteCandidates = hostSignalJson.candidates;
+        this.remoteCandidates.push(...(hostSignalJson.candidates ?? []));
         this.accessKey = hostSignalJson.accessKey;
     }
 
@@ -136,9 +136,6 @@ export class SignallingScope {
     }
 
     async guestGet(): Promise<void> {
-        if (this.remoteSessionDescription || this.remoteCandidates.length) {
-            return;
-        }
 
         const q = new URLSearchParams({ id: this.id, accessKey: this.accessKey });
         const guestSignal =
@@ -150,7 +147,7 @@ export class SignallingScope {
         const guestSignalJson = await guestSignal.json();
 
         this.remoteSessionDescription = guestSignalJson.description;
-        this.remoteCandidates = guestSignalJson.candidates;
+        this.remoteCandidates.push(...(guestSignalJson.candidates ?? []));
     }
 
     async polling(peerConnection: RTCPeerConnection,
@@ -210,10 +207,11 @@ export class SignallingScope {
         }
 
         if (this.remoteCandidates.length) {
-            const remoteCandidates = this.remoteCandidates;
-            this.remoteCandidates = [];
 
             if (peerConnection.remoteDescription) {
+                const remoteCandidates = this.remoteCandidates;
+                this.remoteCandidates = [];
+
                 for (const candidate of remoteCandidates) {
                     await peerConnection.addIceCandidate(JSON.parse(atob(candidate)));
                 }
@@ -250,10 +248,11 @@ export class SignallingScope {
         }
 
         if (this.remoteCandidates.length) {
-            const remoteCandidates = this.remoteCandidates;
-            this.remoteCandidates = [];
 
             if (peerConnection.remoteDescription) {
+                const remoteCandidates = this.remoteCandidates;
+                this.remoteCandidates = [];
+
                 for (const candidate of remoteCandidates) {
                     await peerConnection.addIceCandidate(JSON.parse(atob(candidate)));
                 }

@@ -190,6 +190,10 @@ export function setPeerMediaStream(roomId: number,
             })!;
 
         peerVideo.srcObject = stream;
+        peerVideo.muted = true;
+        peerVideo.playsInline = true;
+
+        peerVideo.play();
     }
 
     if (kind === 'audio') {

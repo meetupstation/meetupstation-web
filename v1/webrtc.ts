@@ -64,7 +64,7 @@ export async function meet(
             try {
                 await pageElements.setPeerMediaStream(room.id, peerConnectionId, stream, track.kind);
             } catch (error) {
-                console.error('while parsing storage parameter:', error);
+                console.error('ontrack():', error);
             }
             // pageElements.setRemoteStream(roomId, peerConnectionId, stream);
             // pageElements.setRemoteVisible(roomId, peerConnectionId, track.kind, !track.muted);

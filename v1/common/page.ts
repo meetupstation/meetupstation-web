@@ -190,19 +190,6 @@ export async function setPeerMediaStream(roomId: number,
             })!;
 
         peerVideo.srcObject = stream;
-        peerVideo.muted = true;
-        peerVideo.playsInline = true;
-
-        await peerVideo.play();
-
-        const peervideoPlayButtons = roomDiv.querySelectorAll<HTMLInputElement>('button');
-        const peervideoPlayButton = [...peervideoPlayButtons].find(
-            (item) => {
-                return getComputedStyle(item).getPropertyValue('--vpeerconnectionid').trim() === `${peerConnectionId}` &&
-            getComputedStyle(item).getPropertyValue('--vstreamid').trim() === `${stream.id}`;
-            })!;
-
-        peervideoPlayButton.disabled = true;
     }
 
     if (kind === 'audio') {

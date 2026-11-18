@@ -1,42 +1,64 @@
-<html style="max-width: 100%; overflow-x: hidden; font-size: 2em;" align="center">
-<script src="page.js"></script>
-<script src="webrtc.js"></script>
+<!DOCTYPE html>
+<html>
 
 <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Meetup Station</title>
+    <link rel="stylesheet" href="main.css">
+    <script type="module" src="page.js"></script>
 </head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<body style="max-width: 100%; overflow-x: hidden; ">
-
-    <label id="progress"></label><br>
-
-    <select id="media" style="width: 8em; font-size: 0.7em;">
-        <option value="None">None</option>
-        <option value="Audio">Audio</option>
-        <option value="Video">Video</option>
-        <option value="Video HQ">Video HQ</option>
-    </select><br>
-
-    <input type="text" id="hostId" style="width: 14em; font-size: 0.7em;">
-    <label id="hostIdDisplay"></label><br>
-    <div>
-        <button id="guestButton" onclick="guest()" style="font-size: 0.6em;">
-            Dial a host
-        </button>
-        <button id="hostButton" onclick="host()" style="font-size: 0.6em;">
-            or become one
-        </button>
-    </div>
-
-    <label>Remote Video</label><br>
-    <!-- <div id="remoteVideos"></div> -->
-    <video id="remoteVideo" style="width: 10em; height: 8em" autoplay controls playsinline></video>
-    <br>
-
-    <label>Local Video</label><br>
-    <video id="localVideo" style="width: 10em; height: 8em" autoplay controls muted playsinline></video>
-    <br>
+<body>
+    <header>
+        <div class="textArea">
+            <textarea id="settings" rows="10" cols="28"></textarea>
+        </div>
+        <div class="headerControls">
+            <input type="checkbox" id="settingsToggle">
+            <label for="settingsToggle"></label>
+            <button id="newRoomButton"></button>
+            <label for="newRoomButton"></label>
+            <input type='text' id='hostId'>
+        </div>
+    </header>
+    <template id="room-template">
+        <input type="radio" class="roomRadio" name="roomId" value="__" id="roomId__">
+        <div for="roomId__" class="room" style="--vhostid: ''; --vroomid: __">
+            <label for="roomId__" class="hostId"></label>
+            <div class="roomControls">
+                <button class="closeRoomButton" id="closeRoomButton__"></button>
+                <label for="closeRoomButton__"></label>
+                <input type="checkbox" class="cameraToggle" id="cameraToggle__">
+                <label for="cameraToggle__"></label>
+                <input type="checkbox" class="micToggle" id="micToggle__">
+                <label for="micToggle__"></label>
+            </div>
+            <div for="roomId__" class="errorMessage"></div>
+            <div class="peers">
+            </div>
+            <div class="media">
+            </div>
+        </div>
+    </template>
+    <template id="peer-template">
+        <div class="statusWheel" style="--vp: 0; --vpeerconnectionid: __">
+            <label for="roomId__" style="--vc: 1"></label>
+            <label for="roomId__" style="--vc: 2"></label>
+            <label for="roomId__" style="--vc: 0"></label>
+            <label for="roomId__" style="--vc: 3"></label>
+        </div>
+    </template>
+    <template id="peer-media-template">
+        <div class="peerMedia" style="--vpeerconnectionid: __; --vstreamid: __">
+            <video autoplay playsinline muted>
+            </video>
+            <audio autoplay>
+            </audio>
+            <input type="checkbox" class="audioToggle" id="audioToggle__" checked>
+            <label for="audioToggle__"></label>
+        </div>
+    </template>
 </body>
 
 </html>

@@ -1,330 +1,118 @@
-async function initializePeerConnection() {
-    const peerConnection = new RTCPeerConnection({
-        iceServers: [{
-            urls: 'stun:stun.l.google.com:19302'
-        }]
-    });
-    // stun:stun.l.google.com:19302
-    // stun:stun.stunprotocol.org
-
-    // peerConnection.onaddstream = function (event) {
-    //     pageSetRemoteVideoStream(event.stream);
-    // };
-    peerConnection.ontrack = function (event) {
-        // console.log('ontrack', event.track.kind);
-        pageSetRemoteVideoStream(event.streams[0]);
-    };
-
-    return peerConnection;
-}
-
-function prepareDataChannel(peerConnection, sessionData) {
-    const dataChannel = peerConnection.createDataChannel('meetupstation', {
-        ordered: true,
-        negotiated: true,
-        id: 0
-    });
-    dataChannel.onopen = () => {
-        sessionData.dataChannel = dataChannel;
-        dataChannel.onmessage = (message) => {
-            dataChannelHandler(message.data);
-            console.log(message.data);
-        }
-    };
-    dataChannel.onclose = () => {
-        sessionData.dataChannel = null;
-    };
-}
-
-async function prepareHostOffer(peerConnection, sessionData) {
-    peerConnection.onicecandidate = (event) => {
-        // this is what makes waitForLocalDescription functional
-        //
-        if (event.candidate === null) {
-            // console.log('all ice candidates', event);
-            const ld = JSON.stringify(peerConnection.localDescription);
-            sessionData.localSessionDescription = btoa(ld);
-        }
-    };
-
-    const media = await pageGetUserMedia();
-    if (media.stream) {
-        for (const track of media.stream.getTracks()) {
-            peerConnection.addTrack(track, media.stream);
-        }
-
-        pageSetLocalVideoStream(media.stream);
-    }
-    if (!media.audio) {
-        peerConnection.addTransceiver('audio', { 'direction': 'recvonly' });
-    }
-    if (!media.video) {
-        peerConnection.addTransceiver('video', { 'direction': 'recvonly' });
-    }
-
-    prepareDataChannel(peerConnection, sessionData);
-
-    const offer = await peerConnection.createOffer();
-
-    await peerConnection.setLocalDescription(offer);
-}
-
-async function prepareGuestAnswer(peerConnection, sessionData, hostId) {
-    peerConnection.onicecandidate = (event) => {
-        // this is what makes waitForLocalDescription functional
-        //
-        if (event.candidate === null) {
-            // console.log('all ice candidates', event);
-            const ld = JSON.stringify(peerConnection.localDescription);
-            sessionData.localSessionDescription = btoa(ld);
-        }
-    };
-
-    const media = await pageGetUserMedia();
-    if (media.stream) {
-        for (const track of media.stream.getTracks()) {
-            peerConnection.addTrack(track, media.stream);
-        }
-
-        pageSetLocalVideoStream(media.stream);
-    }
-    // if (!media.audio) {
-    //     peerConnection.addTransceiver('audio', { 'direction': 'recvonly' });
-    // }
-    // if (!media.video) {
-    //     peerConnection.addTransceiver('video', { 'direction': 'recvonly' });
-    // }
-
-    prepareDataChannel(peerConnection, sessionData);
-
-    const hostSignal = await fetch(`${window.location.origin}/api/host?id=${hostId}`, {
-        method: 'GET'
-    });
-
-    if (!hostSignal.ok) {
-        throw Error('host not set up');
-    }
-
-    const hostSignalJson = await hostSignal.json();
-
-    const rd = JSON.parse(atob(hostSignalJson.description));
-    await peerConnection.setRemoteDescription(rd);
-
-    const answerDescription = await peerConnection.createAnswer();
-    peerConnection.setLocalDescription(answerDescription);
-}
-
-async function waitForLocalDescription(sessionData) {
-    while (!sessionData.localSessionDescription) {
-        await new Promise(resolve => setTimeout(resolve, 25));
-    }
-}
-
-async function waitForPeer(peerConnection, hostId) {
+import * as pageElements from './common/page.js';
+import * as storageController from './storage.js';
+import * as signalling from './common/signalling.js';
+export async function meet(roomId, rooms, rtcConfiguration) {
     while (true) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        const guestSignal = await fetch(`${window.location.origin}/api/guest?hostId=${hostId}`, {
-            method: 'GET'
-        });
-
-        if (!guestSignal.ok) {
-            throw Error('guest not available');
-        }
-
-        const guestSignalJson = await guestSignal.json();
-        if (guestSignalJson.guestDescription) {
-            await peerConnection.setRemoteDescription(JSON.parse(atob(guestSignalJson.guestDescription)));
-
-            break;
-        }
-    }
-}
-
-async function waitForIceConnected(peerConnection) {
-    while (['new', 'checking', 'disconnected'].indexOf(peerConnection.iceConnectionState) !== -1) {
-        await new Promise(resolve => setTimeout(resolve, 25));
-    }
-
-    if (peerConnection.iceConnectionState !== 'connected') {
-        throw Error(`unexpected iceConnectionState (connected?): ${peerConnection.iceConnectionState}`);
-    }
-}
-
-async function waitForIceDisonnected(peerConnection, sessionData) {
-    let haveDataChannel = !!sessionData.dataChannel;
-
-    while (peerConnection.iceConnectionState === 'connected') {
-        if (haveDataChannel === true && sessionData.dataChannel === null) {
-            pageResetDataControllers();
-        }
-        haveDataChannel = !!sessionData.dataChannel;
-
-        await new Promise(resolve => setTimeout(resolve, 25));
-    }
-
-    if (peerConnection.iceConnectionState !== 'disconnected') {
-        throw Error(`unexpected iceConnectionState (disconnected?): ${peerConnection.iceConnectionState}`);
-    }
-}
-
-function getIpAddressUtility(description) {
-    return description.sdp.split('\r\n')
-        .filter(
-            function (line) {
-                return line.indexOf('c=IN IP4 ') === 0;
+        const room = rooms.get(`${roomId}`);
+        for (const [_, peer] of room.peers) {
+            if ([
+                'connected',
+                'completed'
+            ].indexOf(peer.peerConnection.iceConnectionState) === -1) {
+                closePeer(roomId, peer.connectionId, rooms);
             }
-        )
-        .filter(function (line, index, array) {
-            return array.indexOf(line) === index;
-        })
-        .map(function (line) {
-            return line.substring(9);
-        })
-        .filter(function (line) {
-            return line !== '0.0.0.0';
-        })
-        .join(',');
-}
-
-function setUpDataChannelUtility(sessionData) {
-    
-}
-
-function dataChannelHandler(message) {
-    
-}
-
-async function host() {
-    let phase = '';
-    try {
-        pageStartCall();
-
-        const sessionData = {
-            localSessionDescription: '',
-            dataChannel: undefined
+        }
+        if (room.meetingType === signalling.MeetingType.GUEST) {
+            for (const [_, peer] of room.peers) {
+                try {
+                    await room.waitForIceClosed(peer.peerConnection);
+                }
+                catch (_) { }
+                if (room.interruptMeet) {
+                    return;
+                }
+                closePeer(roomId, peer.connectionId, rooms);
+            }
+        }
+        room.signalling.restart();
+        const peerConnectionId = room.getAndUpdatePeerConnectionId();
+        if (room.signalling.accessKey) {
+            if (room.meetingType &&
+                room.meetingType === signalling.MeetingType.GUEST) {
+                room.signalling.accessKey = '';
+            }
+        }
+        else if (room.meetingType !== signalling.MeetingType.GUEST) {
+            room.meetingType = null;
+        }
+        pageElements.appendPeer(room.id, peerConnectionId);
+        await room.initializePeerConnection(peerConnectionId, rtcConfiguration);
+        pageElements.setPeerProgress(room.id, peerConnectionId, 1);
+        const peer = room.getPeer(peerConnectionId);
+        peer.peerConnection.ontrack = function (event) {
+            const track = event.track;
+            const stream = event.streams[0];
+            pageElements.setPeerMediaStream(room.id, peerConnectionId, stream, track.kind);
+            // pageElements.setRemoteStream(roomId, peerConnectionId, stream);
+            // pageElements.setRemoteVisible(roomId, peerConnectionId, track.kind, !track.muted);
+            // track.addEventListener('unmute', () =>
+            //     pageElements.setRemoteVisible(this.id, peerConnectionId, track.kind, true));
+            // track.addEventListener('mute', () =>
+            //     pageElements.setRemoteVisible(this.id, peerConnectionId, track.kind, false));
         };
-        pageSetProgress('creating the peer connection');
-        phase = 'initializePeerConnection';
-        const peerConnection = await initializePeerConnection();
-
-        pageSetProgress('creating the host offer');
-        phase = 'prepareHostOffer';
-        await prepareHostOffer(peerConnection, sessionData);
-
-        pageSetProgress('waiting for all ice candidates');
-        phase = 'waitForLocalDescription';
-        await waitForLocalDescription(sessionData);
-
-        phase = 'signalling';
-        let hostSignal = await fetch(`${window.location.origin}/api/host?id=${pageHostId()}`, {
-            method: 'GET'
-        });
-
-        if (hostSignal.ok) {
-            throw Error('host already exists');
-        }
-
-        hostSignal = await fetch(`${window.location.origin}/api/host`, {
-            method: 'POST',
-            body: `{"id": "${pageHostId()}", "description": "${sessionData.localSessionDescription}"}`,
-            headers: {
-                'Content-type': 'application/json; charset=UTF-8'
+        peer.peerConnection.onicecandidate = (event) => {
+            if (event.candidate === null) {
+                room.signalling.localSessionDescription =
+                    btoa(JSON.stringify(peer.peerConnection.localDescription));
             }
-        });
-
-        if (!hostSignal.ok) {
-            throw Error('cannot establish the host id');
-        }
-
-        const hostSignalJson = await hostSignal.json();
-
-        pageSetProgress('waiting for the guest to join...');
-        pageSetHostId(hostSignalJson.id);
-
-        await waitForPeer(peerConnection, hostSignalJson.id);
-
-        pageSetProgress('connecting...');
-
-        phase = 'waitForIceConnected';
-        await waitForIceConnected(peerConnection);
-
-        const localIpAddress = getIpAddressUtility(peerConnection.localDescription);
-        const remoteIpAddress = getIpAddressUtility(peerConnection.remoteDescription);
-
-        pageSetProgress(`connected:${localIpAddress}<=>${remoteIpAddress}`);
-
-        setUpDataChannelUtility(sessionData);
-
-        phase = 'waitForIceDisonnected';
-        await waitForIceDisonnected(peerConnection, sessionData);
-        pageNotify('disconnected');
-    } catch (error) {
-        pageNotify(`${phase}: ${error}`);
-    }
-
-    peerConnection = null;
-
-    pageEndCall();
-}
-
-async function guest() {
-    let phase = '';
-    try {
-        pageStartCall();
-
-        const sessionData = {
-            localSessionDescription: '',
-            dataChannel: undefined
+            else {
+                room.signalling.localCandidates.push(btoa(JSON.stringify(event.candidate)));
+            }
         };
-        pageSetProgress('creating the peer connection');
-        phase = 'initializePeerConnection';
-        const peerConnection = await initializePeerConnection();
-
-        const hostId = pageHostId();
-        pageSetProgress('creating the guest answer');
-        phase = 'prepareGuestAnswer';
-        await prepareGuestAnswer(peerConnection, sessionData, hostId);
-
-        pageSetProgress('waiting for all ice candidates');
-        phase = 'waitForLocalDescription';
-        await waitForLocalDescription(sessionData);
-
-        pageSetProgress('connecting...');
-
-        phase = 'signalling';
-        const guestSignal = await fetch(`api/guest`, {
-            method: 'POST',
-            body: `{"hostId": "${hostId}", "guestDescription": "${sessionData.localSessionDescription}"}`,
-            headers: {
-                'Content-type': 'application/json; charset=UTF-8'
-            }
-        });
-
-        if (!guestSignal.ok) {
-            throw Error('host not found');
+        await room.ifHostPrepareOffer(peer.peerConnection);
+        const storage = storageController.load();
+        if (storage.rooms.indexOf(room.signalling.id) === -1) {
+            storage.rooms.push(room.signalling.id);
         }
-
-        const guestSignalJson = await guestSignal.json();
-
-        phase = 'waitForIceConnected';
-        await waitForIceConnected(peerConnection);
-
-        const localIpAddress = getIpAddressUtility(peerConnection.localDescription);
-        const remoteIpAddress = getIpAddressUtility(peerConnection.remoteDescription);
-
-        pageSetProgress(`connected:${localIpAddress}<=>${remoteIpAddress}`);
-
-        setUpDataChannelUtility(sessionData);
-
-        phase = 'waitForIceDisonnected';
-        await waitForIceDisonnected(peerConnection, sessionData);
-        pageNotify('disconnected');
-    } catch (error) {
-        pageNotify(`${phase}: ${error}`);
+        storageController.save(storage);
+        pageElements.setRoomHostId(room.id, room.signalling.id);
+        if (await room.waitForIceConnected(peer.peerConnection)) {
+            pageElements.setPeerProgress(room.id, peerConnectionId, 4);
+        }
+        if (room.interruptMeet) {
+            return;
+        }
     }
-
-    peerConnection = null;
-
-    pageEndCall();
+}
+export async function interruptMeet(roomId, rooms) {
+    const room = rooms.get(`${roomId}`);
+    room.interruptMeet = true;
+    const stepWait = 200;
+    while (room.interruptMeet === true) {
+        await new Promise(resolve => setTimeout(resolve, stepWait));
+    }
+}
+export function interruptMeetReset(roomId, rooms) {
+    const room = rooms.get(`${roomId}`);
+    const result = room.interruptMeet;
+    room.interruptMeet = false;
+    return result;
+}
+export async function startCamera(roomId, rooms) {
+    const room = rooms.get(`${roomId}`);
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const cameraTracks = stream.getVideoTracks();
+    const cameraTrack = cameraTracks[room.nextCameraTrackIndex];
+    room.nextCameraTrackIndex = (room.nextCameraTrackIndex + 1) % cameraTracks.length;
+    room.setCameraTrack(cameraTrack);
+}
+export async function stopCamera(roomId, rooms) {
+    const room = rooms.get(`${roomId}`);
+    room.setCameraTrack(null);
+}
+export async function startMic(roomId, rooms) {
+    const room = rooms.get(`${roomId}`);
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const micTrack = stream.getAudioTracks()[0];
+    room.setMicTrack(micTrack);
+}
+export async function stopMic(roomId, rooms) {
+    const room = rooms.get(`${roomId}`);
+    room.setMicTrack(null);
+}
+export function closePeer(roomId, peerConnectionId, rooms) {
+    const room = rooms.get(`${roomId}`);
+    pageElements.closePeer(roomId, peerConnectionId);
+    room.peers.get(peerConnectionId).peerConnection.close();
+    room.peers.delete(peerConnectionId);
 }

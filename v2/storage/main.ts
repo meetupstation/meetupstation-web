@@ -1,17 +1,6 @@
 export class Storage {
     rtcConfiguration: RTCConfiguration = {
         iceServers: [
-            {
-                urls: [
-                    'stun:u.matrix.am:3478'
-                ]
-            },{
-                urls: [
-                    'turns:u.matrix.am:3478?transport=udp'
-                ],
-                username: 'dummy',
-                credential: 'willnotwork'
-            }
         ],
         iceTransportPolicy: 'all'
     };

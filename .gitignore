@@ -1,5 +1,11 @@
 package.json
 package-lock.json
+v1/common/page.js
+v1/common/signalling.js
+v1/common/webrtc.js
+v1/page.js
+v1/storage.js
+v1/webrtc.js
 v2/storage/main.js
 v2/page/main.js
 v2/page/elements.js

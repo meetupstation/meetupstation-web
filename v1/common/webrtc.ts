@@ -140,7 +140,7 @@ export class Room {
         const startTime = Date.now();
         const timeout = (() => {
             if (this.meetingType === signalling.MeetingType.HOST) {
-                return 10_000;
+                return 4_000;
             } else {
                 return 3_000;
             }

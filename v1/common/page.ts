@@ -259,8 +259,7 @@ export async function mediaToggleAudio(
 export async function mediaPlayVideo(
     roomId: number,
     peerConnectionId: number,
-    streamId: string,
-    self: HTMLButtonElement) {
+    streamId: string) {
     try {
         const roomDivs = document.querySelectorAll<HTMLDivElement>('div.media');
         const roomDiv = [...roomDivs].find(
@@ -276,11 +275,12 @@ export async function mediaPlayVideo(
 
         const videoElement = peerMedia.querySelector<HTMLAudioElement>('video')!;
 
+        const playVideoButton = peerMedia.querySelector<HTMLButtonElement>('button')!;
+
         await videoElement.play();
-        self.disabled = true;
+        playVideoButton.disabled = true;
     } catch (error) {
         const message = String(error);
         setErrorMessage(roomId, message);
-        self.disabled = false;
     }
 }

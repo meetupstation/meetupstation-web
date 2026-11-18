@@ -66,8 +66,12 @@ export async function meet(
             } catch (error) {
                 console.error('ontrack():', error);
             }
-            // pageElements.setRemoteStream(roomId, peerConnectionId, stream);
-            // pageElements.setRemoteVisible(roomId, peerConnectionId, track.kind, !track.muted);
+
+            track.addEventListener('unmute', async () => {
+                if (track.kind === 'video') {
+                    await pageElements.mediaPlayVideo(room.id, peerConnectionId, stream.id);
+                }
+            });
 
         // track.addEventListener('unmute', () =>
         //     pageElements.setRemoteVisible(this.id, peerConnectionId, track.kind, true));

@@ -391,7 +391,7 @@ div.peerMedia button.videoPlayButton+label::before {
     position: absolute;
     right: 50%;
     bottom: 50%;
-    z-index: 2;
+    z-index: 1;
     filter: grayscale(1) saturate(3);
     font-size: 0.7rem;
     content: "▶️";

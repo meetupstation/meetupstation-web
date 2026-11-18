@@ -260,7 +260,7 @@ export async function mediaPlayVideo(
     roomId: number,
     peerConnectionId: number,
     streamId: string,
-    self: HTMLInputElement) {
+    self: HTMLButtonElement) {
     try {
         const roomDivs = document.querySelectorAll<HTMLDivElement>('div.media');
         const roomDiv = [...roomDivs].find(
@@ -281,6 +281,6 @@ export async function mediaPlayVideo(
     } catch (error) {
         const message = String(error);
         setErrorMessage(roomId, message);
-        self.checked = !self.checked;
+        self.disabled = false;
     }
 }

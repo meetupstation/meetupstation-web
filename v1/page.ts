@@ -179,7 +179,7 @@ document.addEventListener('click', async (event) => {
 
         const streamId = getComputedStyle(videoPlayButton).getPropertyValue('--vstreamid').trim();
 
-        await pageElements.mediaPlayVideo(roomIdNum, peerConnectionIdNum, streamId, audioToggle);
+        await pageElements.mediaPlayVideo(roomIdNum, peerConnectionIdNum, streamId, videoPlayButton);
         return;
     }
 });

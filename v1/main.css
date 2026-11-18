@@ -408,10 +408,3 @@ div.peerMedia button.videoPlayButton:disabled+label::before {
     width: 0;
     display: none;
 }
-
-div.peerMedia button.videoPlayButton:active+label::before {
-    opacity: 0;
-    height: 0;
-    width: 0;
-    display: none;
-}

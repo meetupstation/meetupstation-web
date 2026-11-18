@@ -57,11 +57,11 @@ export async function meet(
 
         const peer = room.getPeer(peerConnectionId);
 
-        peer.peerConnection.ontrack = function (event) {
+        peer.peerConnection.ontrack = async function (event) {
             const track = event.track;
             const stream = event.streams[0];
 
-            pageElements.setPeerMediaStream(room.id, peerConnectionId, stream, track.kind);
+            await pageElements.setPeerMediaStream(room.id, peerConnectionId, stream, track.kind);
             // pageElements.setRemoteStream(roomId, peerConnectionId, stream);
             // pageElements.setRemoteVisible(roomId, peerConnectionId, track.kind, !track.muted);
 

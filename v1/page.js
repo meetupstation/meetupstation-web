@@ -146,6 +146,16 @@ document.addEventListener('click', async (event) => {
         await pageElements.mediaToggleAudio(roomIdNum, peerConnectionIdNum, streamId, audioToggle);
         return;
     }
+    const videoPlayButton = event.target.closest('button.videoPlayButton');
+    if (videoPlayButton) {
+        const roomId = getComputedStyle(videoPlayButton).getPropertyValue('--vroomid').trim();
+        const roomIdNum = Number.parseInt(roomId);
+        const peerConnectionId = getComputedStyle(videoPlayButton).getPropertyValue('--vpeerconnectionid').trim();
+        const peerConnectionIdNum = Number.parseInt(peerConnectionId);
+        const streamId = getComputedStyle(videoPlayButton).getPropertyValue('--vstreamid').trim();
+        await pageElements.mediaPlayVideo(roomIdNum, peerConnectionIdNum, streamId, audioToggle);
+        return;
+    }
 });
 const storage = storageController.load();
 storageController.save(storage);

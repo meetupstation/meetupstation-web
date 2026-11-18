@@ -359,15 +359,11 @@ div.peerMedia input[type=checkbox].audioToggle {
 
 div.peerMedia input[type=checkbox].audioToggle+label::before {
     position: absolute;
-    right: 0.5rem;
+    left: 0.5rem;
     bottom: 0.5rem;
     z-index: 1;
-    cursor: pointer;
     border: 0;
     border-radius: 50%;
-    /* padding: 0.5rem; */
-    /* background: rgb(0 0 0 / 60%);
-    color: white; */
 
     filter: grayscale(1) saturate(3);
     font-size: 0.7rem;
@@ -382,4 +378,40 @@ div.peerMedia input[type=checkbox].audioToggle:not(:checked)+label::before {
 
 div.peerMedia input[type=checkbox].audioToggle:active+label::before {
     opacity: var(--universalOpacity);
+}
+
+div.peerMedia button.videoPlayButton {
+    opacity: 0;
+    height: 0;
+    width: 0;
+    display: none;
+}
+
+div.peerMedia button.videoPlayButton+label::before {
+    position: absolute;
+    right: 50%;
+    bottom: 50%;
+    z-index: 2;
+    filter: grayscale(1) saturate(3);
+    font-size: 0.7rem;
+    content: "▶️";
+    opacity: 1;
+}
+
+div.peerMedia button.videoPlayButton:active+label::before {
+    opacity: calc(2*var(--universalOpacity));
+}
+
+div.peerMedia button.videoPlayButton:disabled+label::before {
+    opacity: 0;
+    height: 0;
+    width: 0;
+    display: none;
+}
+
+div.peerMedia button.videoPlayButton:active+label::before {
+    opacity: 0;
+    height: 0;
+    width: 0;
+    display: none;
 }

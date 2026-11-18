@@ -148,7 +148,7 @@ export function setRoomHostId(roomId: number, hostId: string) {
     roomDiv.style.setProperty('--vhostid', JSON.stringify(hostId));
 }
 
-export function setPeerMediaStream(roomId: number,
+export async function setPeerMediaStream(roomId: number,
     peerConnectionId: number,
     stream: MediaStream,
     kind: string) {
@@ -172,8 +172,8 @@ export function setPeerMediaStream(roomId: number,
             .replaceAll('roomId__', `roomId${roomId}`) // useless currently
             .replaceAll('--vpeerconnectionid: __', `--vpeerconnectionid: ${peerConnectionId}`)
             .replaceAll('--vstreamid: __', `--vstreamid: ${stream.id}`)
-
-            .replaceAll('audioToggle__', `audioToggle_${stream.id}`);
+            .replaceAll('audioToggle__', `audioToggle_${stream.id}`)
+            .replaceAll('videoPlayButton__', `videoPlayButton_${stream.id}`);
 
         const templatePeer = document.createElement('template');
         templatePeer.innerHTML = html;
@@ -193,7 +193,16 @@ export function setPeerMediaStream(roomId: number,
         peerVideo.muted = true;
         peerVideo.playsInline = true;
 
-        peerVideo.play();
+        await peerVideo.play();
+
+        const peervideoPlayButtons = roomDiv.querySelectorAll<HTMLInputElement>('button');
+        const peervideoPlayButton = [...peervideoPlayButtons].find(
+            (item) => {
+                return getComputedStyle(item).getPropertyValue('--vpeerconnectionid').trim() === `${peerConnectionId}` &&
+            getComputedStyle(item).getPropertyValue('--vstreamid').trim() === `${stream.id}`;
+            })!;
+
+        peervideoPlayButton.disabled = true;
     }
 
     if (kind === 'audio') {
@@ -253,6 +262,35 @@ export async function mediaToggleAudio(
         const audioElement = peerMedia.querySelector<HTMLAudioElement>('audio')!;
 
         audioElement.muted = !self.checked;
+    } catch (error) {
+        const message = String(error);
+        setErrorMessage(roomId, message);
+        self.checked = !self.checked;
+    }
+}
+
+export async function mediaPlayVideo(
+    roomId: number,
+    peerConnectionId: number,
+    streamId: string,
+    self: HTMLInputElement) {
+    try {
+        const roomDivs = document.querySelectorAll<HTMLDivElement>('div.media');
+        const roomDiv = [...roomDivs].find(
+            (item) => {
+                return getComputedStyle(item).getPropertyValue('--vroomid').trim() === `${roomId}`;
+            })!;
+        const peerMedias = roomDiv.querySelectorAll<HTMLDivElement>('div.peerMedia');
+        const peerMedia = [...peerMedias].find(
+            (item) => {
+                return getComputedStyle(item).getPropertyValue('--vpeerconnectionid').trim() === `${peerConnectionId}` &&
+            getComputedStyle(item).getPropertyValue('--vstreamid').trim() === `${streamId}`;
+            })!;
+
+        const videoElement = peerMedia.querySelector<HTMLAudioElement>('video')!;
+
+        await videoElement.play();
+        self.disabled = true;
     } catch (error) {
         const message = String(error);
         setErrorMessage(roomId, message);

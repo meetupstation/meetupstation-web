@@ -24,9 +24,11 @@ export async function newRoom(rooms: Map<string, webrtcElements.Room>): Promise<
     const storageRoom = storage.rooms[hostId];
     if (storageRoom) {
         if (storageRoom.camera) {
+            pageElements.setRoomCameraChecked(roomId, true);
             await roomToggleCamera(roomId);
         }
         if (storageRoom.microphone) {
+            pageElements.setRoomMicChecked(roomId, true);
             await roomToggleMic(roomId);
         }
     }

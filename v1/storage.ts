@@ -74,11 +74,21 @@ export function loadSerialized(serialized: string): Storage {
                         camera: false,
                         microphone: false
                     };
-                } else if (typeof(room) === 'object' &&
+                }
+            }
+        } else if (typeof(parsed.rooms) === 'object' &&
+                    parsed.rooms !== null) {
+            for (const hostId in parsed.rooms) {
+                const room : {
+                    camera: boolean,
+                    microphone: boolean
+                } = parsed.rooms[hostId];
+
+                if (typeof(room) === 'object' &&
                     room !== null &&
                     typeof(room.camera) === 'boolean' &&
                     typeof(room.microphone) === 'boolean') {
-                    storage.rooms[room] = {
+                    storage.rooms[hostId] = {
                         camera: room.camera,
                         microphone: room.microphone
                     };

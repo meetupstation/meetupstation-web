@@ -103,6 +103,8 @@ export async function meet(
             pageElements.setPeerProgress(room.id, peerConnectionId, 4);
             await room.setCameraTrack(room.cameraTrack);
             await room.setMicTrack(room.micTrack);
+            await pageElements.mediaUnmuteAllAudio(roomId, peerConnectionId);
+            await pageElements.mediaPlayAllVideo(roomId, peerConnectionId);
         }
 
         if (room.interruptMeet) {

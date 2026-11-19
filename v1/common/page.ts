@@ -202,8 +202,7 @@ export function setRoomMediaControlEnabled(roomId: number, enabled: boolean) {
 
 export async function setPeerMediaStream(roomId: number,
     peerConnectionId: number,
-    stream: MediaStream,
-    kind: string) {
+    stream: MediaStream) {
     const roomDivs = document.querySelectorAll<HTMLDivElement>('div.media');
     const roomDiv = [...roomDivs].find(
         (item) => {
@@ -237,36 +236,23 @@ export async function setPeerMediaStream(roomId: number,
         roomDiv.appendChild(fragment);
     }
 
-    if (kind === 'video') {
-        const peerVideos = roomDiv.querySelectorAll<HTMLVideoElement>('video');
-        const peerVideo = [...peerVideos].find(
-            (item) => {
-                return getComputedStyle(item).getPropertyValue('--vpeerconnectionid').trim() === `${peerConnectionId}` &&
-            getComputedStyle(item).getPropertyValue('--vstreamid').trim() === `${stream.id}`;
-            })!;
+    const peerVideos = roomDiv.querySelectorAll<HTMLVideoElement>('video');
+    const peerVideo = [...peerVideos].find(
+        (item) => {
+            return getComputedStyle(item).getPropertyValue('--vpeerconnectionid').trim() === `${peerConnectionId}` &&
+        getComputedStyle(item).getPropertyValue('--vstreamid').trim() === `${stream.id}`;
+        })!;
 
-        peerVideo.srcObject = stream;
-    }
+    peerVideo.srcObject = stream;
 
-    if (kind === 'audio') {
-        const peerAudios = roomDiv.querySelectorAll<HTMLAudioElement>('audio');
-        const peerAudio = [...peerAudios].find(
-            (item) => {
-                return getComputedStyle(item).getPropertyValue('--vpeerconnectionid').trim() === `${peerConnectionId}` &&
-            getComputedStyle(item).getPropertyValue('--vstreamid').trim() === `${stream.id}`;
-            })!;
+    const peerAudioToggles = roomDiv.querySelectorAll<HTMLInputElement>('input');
+    const peerAudioToggle = [...peerAudioToggles].find(
+        (item) => {
+            return getComputedStyle(item).getPropertyValue('--vpeerconnectionid').trim() === `${peerConnectionId}` &&
+        getComputedStyle(item).getPropertyValue('--vstreamid').trim() === `${stream.id}`;
+        })!;
 
-        peerAudio.srcObject = stream;
-
-        const peerAudioToggles = roomDiv.querySelectorAll<HTMLInputElement>('input');
-        const peerAudioToggle = [...peerAudioToggles].find(
-            (item) => {
-                return getComputedStyle(item).getPropertyValue('--vpeerconnectionid').trim() === `${peerConnectionId}` &&
-            getComputedStyle(item).getPropertyValue('--vstreamid').trim() === `${stream.id}`;
-            })!;
-
-        peerAudioToggle.checked = !peerAudio.muted;
-    }
+    peerAudioToggle.checked = !peerVideo.muted;
 }
 
 export function closeMediaStreams(roomId: number, peerConnectionId: number) {
@@ -301,11 +287,11 @@ export async function mediaToggleAudio(
             getComputedStyle(item).getPropertyValue('--vstreamid').trim() === `${streamId}`;
             })!;
 
-        const audioElement = peerMedia.querySelector<HTMLAudioElement>('audio')!;
+        const videoElement = peerMedia.querySelector<HTMLAudioElement>('video')!;
 
         const unmuteAudioInput = peerMedia.querySelector<HTMLInputElement>('input')!;
 
-        audioElement.muted = !unmuteAudioInput.checked;
+        videoElement.muted = !unmuteAudioInput.checked;
     } catch (error) {
         const message = String(error);
         setErrorMessage(roomId, message);

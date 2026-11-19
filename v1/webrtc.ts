@@ -62,7 +62,7 @@ export async function meet(
             const stream = event.streams[0];
 
             try {
-                await pageElements.setPeerMediaStream(room.id, peerConnectionId, stream, track.kind);
+                await pageElements.setPeerMediaStream(room.id, peerConnectionId, stream);
             } catch (error) {
                 console.error('ontrack():', error);
             }

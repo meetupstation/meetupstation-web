@@ -59,29 +59,29 @@ export class Room {
 
     async setupTracksAndDataHandlers(peerConnection: RTCPeerConnection): Promise<void> {
         const localStream = new MediaStream();
-        const audioTransceiver = peerConnection.addTransceiver('audio',
+        peerConnection.addTransceiver('audio',
             {
                 direction: 'sendrecv',
                 streams: [localStream]
             });
-        audioTransceiver.sender.replaceTrack(this.micTrack);
-        const videoTransceiver = peerConnection.addTransceiver('video',
+        peerConnection.addTransceiver('video',
             {
                 direction:'sendrecv',
                 streams: [localStream]
             });
-        videoTransceiver.sender.replaceTrack(this.cameraTrack);
     }
 
     async setCameraTrack(cameraTrack: MediaStreamTrack | null): Promise<void> {
         this.cameraTrack = cameraTrack;
         for (const [_, peer] of this.peers) {
             const transceivers = peer.peerConnection.getTransceivers();
-            const transceiver = transceivers.find(
-                (item) => {
-                    return item.receiver.track.kind === 'video';
-                })!;
-            await transceiver.sender.replaceTrack(cameraTrack);
+            for (const transceiver of transceivers) {
+                if (transceiver.receiver.track.kind === 'video' &&
+                    transceiver.sender.track != cameraTrack
+                ) {
+                    await transceiver.sender.replaceTrack(cameraTrack);
+                }
+            }
         }
     }
 
@@ -89,11 +89,13 @@ export class Room {
         this.micTrack = micTrack;
         for (const [_, peer] of this.peers) {
             const transceivers = peer.peerConnection.getTransceivers();
-            const transceiver = transceivers.find(
-                (item) => {
-                    return item.receiver.track.kind === 'audio';
-                })!;
-            await transceiver.sender.replaceTrack(micTrack);
+            for (const transceiver of transceivers) {
+                if (transceiver.receiver.track.kind === 'audio' &&
+                    transceiver.sender.track != micTrack
+                ) {
+                    await transceiver.sender.replaceTrack(micTrack);
+                }
+            }
         }
     }
 

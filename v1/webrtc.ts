@@ -102,6 +102,8 @@ export async function meet(
 
         if (await room.waitForIceConnected(peer.peerConnection)) {
             pageElements.setPeerProgress(room.id, peerConnectionId, 4);
+            room.setCameraTrack(room.cameraTrack);
+            room.setMicTrack(room.micTrack);
         }
 
         if (room.interruptMeet) {

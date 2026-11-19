@@ -123,7 +123,6 @@ export class Room {
             })(this.meetingType);
 
         if (this.meetingType === signalling.MeetingType.HOST) {
-            await this.setupTracksAndDataHandlers(peerConnection);
 
             await this.signalling.hostPost();
 
@@ -142,9 +141,9 @@ export class Room {
         const startTime = Date.now();
         const timeout = (() => {
             if (this.meetingType === signalling.MeetingType.HOST) {
-                return 4_000;
+                return 11_000;
             } else {
-                return 3_000;
+                return 9_000;
             }
         })();
 

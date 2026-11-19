@@ -87,6 +87,7 @@ export async function meet(
             }
         };
 
+        await room.setupTracksAndDataHandlers(peer.peerConnection);
         await room.ifHostPrepareOffer(peer.peerConnection);
 
         const storage = storageController.load();

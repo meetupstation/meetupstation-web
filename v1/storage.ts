@@ -14,6 +14,23 @@ export class Storage {
 
 const parameterKey: string = 'storage';
 
+function encodeBase64Url(bytes: Uint8Array): string {
+    let binary = '';
+    for (const byte of bytes) {
+        binary += String.fromCharCode(byte);
+    }
+    return btoa(binary)
+        .replaceAll('+', '-')
+        .replaceAll('/', '_')
+        .replace(/=+$/, '');
+}
+
+function decodeBase64Url(encoded: string): Uint8Array {
+    const base64 = encoded.replaceAll('-', '+').replaceAll('_', '/');
+    const binary = atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '='));
+    return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+}
+
 export function loadSerialized(serialized: string): Storage {
     const storage: Storage = new Storage();
     const parsed = JSON.parse(serialized);
@@ -111,7 +128,8 @@ export function load(): Storage {
 
     if (storageParameter) {
         try {
-            const decoded = new TextDecoder().decode(Uint8Array.fromBase64(storageParameter, { alphabet: 'base64url' }));
+            // const decoded = new TextDecoder().decode(Uint8Array.fromBase64(storageParameter, { alphabet: 'base64url' }));
+            const decoded = new TextDecoder().decode(decodeBase64Url(storageParameter));
             return loadSerialized(decoded);
         } catch (error) {
             console.error('while parsing storage parameter:', error);
@@ -128,7 +146,8 @@ export function saveSerialize(storage: Storage): string {
 }
 
 export function save(storage: Storage): void {
-    const encoded = new TextEncoder().encode(saveSerialize(storage)).toBase64({ alphabet: 'base64url', omitPadding: true });
+    // const encoded = new TextEncoder().encode(saveSerialize(storage)).toBase64({ alphabet: 'base64url', omitPadding: true });
+    const encoded = encodeBase64Url(new TextEncoder().encode(saveSerialize(storage)));
 
     const queryParams = new URLSearchParams(window.location.search);
     queryParams.set(parameterKey, encoded);

@@ -18,13 +18,22 @@ export async function newRoom(rooms: Map<string, webrtcElements.Room>): Promise<
         new webrtcElements.Room(roomId, hostId, storage.signalServer)
     );
 
+    const storageRoom = storage.rooms[hostId];
+    if (storageRoom) {
+        if (storageRoom.camera) {
+            await roomToggleCamera(roomId);
+        }
+        if (storageRoom.microphone) {
+            await roomToggleMic(roomId);
+        }
+    }
+
     pageElements.newRoom(roomId);
     pageElements.setRoomHostId(roomId, hostId);
 
     while (true) {
         try {
             pageElements.clearErrorMessage(roomId);
-            const storage = storageController.load();
             await webrtc.meet(roomId,
                 rooms,
                 storage.rtcConfiguration);
@@ -67,7 +76,7 @@ export async function deleteRoom(
 
     if (deleteFromStorage) {
         const storage = storageController.load();
-        storage.rooms = storage.rooms.filter(item => item !== room.signalling.id);
+        delete storage.rooms[roomSignallingId];
         storageController.save(storage);
     }
 }
@@ -93,10 +102,10 @@ export function settingsToggle(self: HTMLInputElement): void {
 }
 
 export async function roomToggleCamera(
-    roomId: number,
-    self: HTMLInputElement) {
+    roomId: number) {
+    const checked = pageElements.getRoomCameraChecked(roomId);
     try {
-        if (self.checked) {
+        if (checked) {
             await webrtc.startCamera(roomId, rooms);
         } else {
             await webrtc.stopCamera(roomId, rooms);
@@ -104,15 +113,15 @@ export async function roomToggleCamera(
     } catch (error) {
         const message = String(error);
         pageElements.setErrorMessage(roomId, message);
-        self.checked = !self.checked;
+        pageElements.setRoomCameraChecked(roomId, !checked);
     }
 }
 
 export async function roomToggleMic(
-    roomId: number,
-    self: HTMLInputElement) {
+    roomId: number) {
+    const checked = pageElements.getRoomMicChecked(roomId);
     try {
-        if (self.checked) {
+        if (checked) {
             await webrtc.startMic(roomId, rooms);
         } else {
             await webrtc.stopMic(roomId, rooms);
@@ -120,7 +129,7 @@ export async function roomToggleMic(
     } catch (error) {
         const message = String(error);
         pageElements.setErrorMessage(roomId, message);
-        self.checked = !self.checked;
+        pageElements.setRoomMicChecked(roomId, !checked);
     }
 }
 
@@ -139,14 +148,20 @@ document.addEventListener('click', async (event) => {
     if (cameraToggle) {
         const roomId = getComputedStyle(cameraToggle).getPropertyValue('--vroomid').trim();
         const roomIdNum = Number.parseInt(roomId);
-        await roomToggleCamera(roomIdNum, cameraToggle);
+        const storageRoom = storage.rooms[pageElements.getRoomHostId(roomIdNum)];
+        if (storageRoom) {
+            await roomToggleCamera(roomIdNum);
+        }
         return;
     }
     const micToggle = (event.target as HTMLInputElement).closest('input.micToggle') as HTMLInputElement;
     if (micToggle) {
         const roomId = getComputedStyle(micToggle).getPropertyValue('--vroomid').trim();
         const roomIdNum = Number.parseInt(roomId);
-        await roomToggleMic(roomIdNum, micToggle);
+        const storageRoom = storage.rooms[pageElements.getRoomHostId(roomIdNum)];
+        if (storageRoom) {
+            await roomToggleMic(roomIdNum);
+        }
         return;
     }
     const closeRoomButton = (event.target as HTMLButtonElement).closest('button.closeRoomButton');
@@ -187,7 +202,7 @@ document.addEventListener('click', async (event) => {
 const storage = storageController.load();
 storageController.save(storage);
 
-for (const room of storage.rooms) {
+for (const room in storage.rooms) {
     pageElements.setHostId(room);
     await newRoom(rooms);
 }

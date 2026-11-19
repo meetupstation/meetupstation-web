@@ -213,6 +213,10 @@ div.roomControls input[type=checkbox].cameraToggle:not(:checked)+label::before {
     opacity: calc(2*var(--universalOpacity));
 }
 
+div.roomControls input[type=checkbox].cameraToggle:disabled+label::before {
+    opacity: var(--universalOpacity);
+}
+
 div.roomControls input[type=checkbox].cameraToggle:active+label::before {
     opacity: var(--universalOpacity);
 }
@@ -233,6 +237,10 @@ div.roomControls input[type=checkbox].micToggle+label::before {
 
 div.roomControls input[type=checkbox].micToggle:not(:checked)+label::before {
     opacity: calc(2*var(--universalOpacity));
+}
+
+div.roomControls input[type=checkbox].micToggle:disabled+label::before {
+    opacity: var(--universalOpacity);
 }
 
 div.roomControls input[type=checkbox].micToggle:active+label::before {

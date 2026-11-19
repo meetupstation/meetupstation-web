@@ -148,6 +148,58 @@ export function setRoomHostId(roomId: number, hostId: string) {
     roomDiv.style.setProperty('--vhostid', JSON.stringify(hostId));
 }
 
+export function getRoomCameraChecked(roomId: number) {
+    const inputCameras = document.querySelectorAll<HTMLInputElement>('input.cameraToggle');
+    const inputCamera = [...inputCameras].find(
+        (item) => {
+            return getComputedStyle(item).getPropertyValue('--vroomid').trim() === `${roomId}`;
+        })!;
+    return inputCamera.checked;
+}
+
+export function setRoomCameraChecked(roomId: number, checked: boolean) {
+    const inputCameras = document.querySelectorAll<HTMLInputElement>('input.cameraToggle');
+    const inputCamera = [...inputCameras].find(
+        (item) => {
+            return getComputedStyle(item).getPropertyValue('--vroomid').trim() === `${roomId}`;
+        })!;
+    inputCamera.checked = checked;
+}
+
+export function getRoomMicChecked(roomId: number) {
+    const inputMics = document.querySelectorAll<HTMLInputElement>('input.micToggle');
+    const inputMic = [...inputMics].find(
+        (item) => {
+            return getComputedStyle(item).getPropertyValue('--vroomid').trim() === `${roomId}`;
+        })!;
+    return inputMic.checked;
+}
+
+export function setRoomMicChecked(roomId: number, checked: boolean) {
+    const inputMics = document.querySelectorAll<HTMLInputElement>('input.micToggle');
+    const inputMic = [...inputMics].find(
+        (item) => {
+            return getComputedStyle(item).getPropertyValue('--vroomid').trim() === `${roomId}`;
+        })!;
+    inputMic.checked = checked;
+}
+
+export function setRoomMediaControlEnabled(roomId: number, enabled: boolean) {
+    const inputCameras = document.querySelectorAll<HTMLInputElement>('input.cameraToggle');
+    const inputCamera = [...inputCameras].find(
+        (item) => {
+            return getComputedStyle(item).getPropertyValue('--vroomid').trim() === `${roomId}`;
+        })!;
+    inputCamera.disabled = !enabled;
+
+    const inputMics = document.querySelectorAll<HTMLInputElement>('input.micToggle');
+    const inputMic = [...inputMics].find(
+        (item) => {
+            return getComputedStyle(item).getPropertyValue('--vroomid').trim() === `${roomId}`;
+        })!;
+    inputMic.disabled = !enabled;
+}
+
 export async function setPeerMediaStream(roomId: number,
     peerConnectionId: number,
     stream: MediaStream,
@@ -175,10 +227,14 @@ export async function setPeerMediaStream(roomId: number,
             .replaceAll('audioToggle__', `audioToggle_${stream.id}`)
             .replaceAll('videoPlayButton__', `videoPlayButton_${stream.id}`);
 
-        const templatePeer = document.createElement('template');
-        templatePeer.innerHTML = html;
+        // const templatePeer = document.createElement('template');
+        // templatePeer.innerHTML = html;
 
-        roomDiv.appendChild(templatePeer.content.cloneNode(true));
+        // roomDiv.appendChild(templatePeer.content.cloneNode(true));
+        // this upper structure at first seems to work, but iOS does not
+        // render the video, unless full screen. below is ok with iOS
+        const fragment = document.createRange().createContextualFragment(html);
+        roomDiv.appendChild(fragment);
     }
 
     if (kind === 'video') {

@@ -1,8 +1,12 @@
 export class Storage {
-    rooms: string[] = [];
+    rooms: {
+        [id: string]: {
+            camera: boolean,
+            microphone: boolean
+        }
+    } = Object.create(null);
     rtcConfiguration: RTCConfiguration = {
-        iceServers: [
-        ],
+        iceServers: [],
         iceTransportPolicy: 'all'
     };
     signalServer: string = '';
@@ -66,7 +70,18 @@ export function loadSerialized(serialized: string): Storage {
         if (Array.isArray(parsed.rooms)) {
             for (const room of parsed.rooms) {
                 if (typeof(room) === 'string' && room) {
-                    storage.rooms.push(room);
+                    storage.rooms[room] = {
+                        camera: false,
+                        microphone: false
+                    };
+                } else if (typeof(room) === 'object' &&
+                    room !== null &&
+                    typeof(room.camera) === 'boolean' &&
+                    typeof(room.microphone) === 'boolean') {
+                    storage.rooms[room] = {
+                        camera: room.camera,
+                        microphone: room.microphone
+                    };
                 }
             }
         }

@@ -18,6 +18,9 @@ export async function newRoom(rooms: Map<string, webrtcElements.Room>): Promise<
         new webrtcElements.Room(roomId, hostId, storage.signalServer)
     );
 
+    pageElements.newRoom(roomId);
+    pageElements.setRoomHostId(roomId, hostId);
+
     const storageRoom = storage.rooms[hostId];
     if (storageRoom) {
         if (storageRoom.camera) {
@@ -27,9 +30,6 @@ export async function newRoom(rooms: Map<string, webrtcElements.Room>): Promise<
             await roomToggleMic(roomId);
         }
     }
-
-    pageElements.newRoom(roomId);
-    pageElements.setRoomHostId(roomId, hostId);
 
     while (true) {
         try {

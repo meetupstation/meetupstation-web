@@ -68,11 +68,8 @@ export async function meet(
             }
 
             track.addEventListener('unmute', async () => {
-                if (track.kind === 'video') {
-                    await pageElements.mediaPlayVideo(room.id, peerConnectionId, stream.id);
-                } else if (track.kind === 'audio') {
-                    await pageElements.mediaToggleAudio(room.id, peerConnectionId, stream.id);
-                }
+                await pageElements.mediaPlayVideo(room.id, peerConnectionId, stream.id);
+                await pageElements.mediaToggleAudio(room.id, peerConnectionId, stream.id);
             });
 
         // track.addEventListener('unmute', () =>

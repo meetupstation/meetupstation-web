@@ -95,8 +95,8 @@ export async function meet(
                 camera: room.cameraTrack != null,
                 microphone: room.micTrack != null
             };
+            storageController.save(storage);
         };
-        storageController.save(storage);
         pageElements.setRoomHostId(room.id, room.signalling.id);
         pageElements.setRoomMediaControlEnabled(room.id, true);
 

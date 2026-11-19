@@ -59,16 +59,18 @@ export class Room {
 
     async setupTracksAndDataHandlers(peerConnection: RTCPeerConnection): Promise<void> {
         const localStream = new MediaStream();
-        peerConnection.addTransceiver('audio',
+        const audioTransceiver = peerConnection.addTransceiver('audio',
             {
                 direction: 'sendrecv',
                 streams: [localStream]
-            }).sender.replaceTrack(this.micTrack);
-        peerConnection.addTransceiver('video',
+            });
+        audioTransceiver.sender.replaceTrack(this.micTrack);
+        const videoTransceiver = peerConnection.addTransceiver('video',
             {
                 direction:'sendrecv',
                 streams: [localStream]
-            }).sender.replaceTrack(this.cameraTrack);
+            });
+        videoTransceiver.sender.replaceTrack(this.cameraTrack);
     }
 
     async setCameraTrack(cameraTrack: MediaStreamTrack | null): Promise<void> {

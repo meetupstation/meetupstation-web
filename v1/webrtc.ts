@@ -68,8 +68,11 @@ export async function meet(
             }
 
             track.addEventListener('unmute', async () => {
-                await pageElements.mediaPlayVideo(room.id, peerConnectionId, stream.id);
-                await pageElements.mediaUnmuteAudio(room.id, peerConnectionId, stream.id);
+                if (track.kind === 'video') {
+                    await pageElements.mediaPlayVideo(room.id, peerConnectionId, stream.id);
+                } else if (track.kind === 'audio') {
+                    await pageElements.mediaToggleAudio(room.id, peerConnectionId, stream.id);
+                }
             });
 
         // track.addEventListener('unmute', () =>
@@ -103,8 +106,6 @@ export async function meet(
             pageElements.setPeerProgress(room.id, peerConnectionId, 4);
             await room.setCameraTrack(room.cameraTrack);
             await room.setMicTrack(room.micTrack);
-            await pageElements.mediaUnmuteAllAudio(roomId, peerConnectionId);
-            await pageElements.mediaPlayAllVideo(roomId, peerConnectionId);
         }
 
         if (room.interruptMeet) {

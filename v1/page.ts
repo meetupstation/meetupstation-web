@@ -148,22 +148,28 @@ document.addEventListener('click', async (event) => {
     }
     const cameraToggle = (event.target as HTMLInputElement).closest('input.cameraToggle') as HTMLInputElement;
     if (cameraToggle) {
+        const storage = storageController.load();
         const roomId = getComputedStyle(cameraToggle).getPropertyValue('--vroomid').trim();
         const roomIdNum = Number.parseInt(roomId);
         const storageRoom = storage.rooms[pageElements.getRoomHostId(roomIdNum)];
         if (storageRoom) {
             await roomToggleCamera(roomIdNum);
+            storageRoom.camera = !storageRoom.camera;
         }
+        storageController.save(storage);
         return;
     }
     const micToggle = (event.target as HTMLInputElement).closest('input.micToggle') as HTMLInputElement;
     if (micToggle) {
+        const storage = storageController.load();
         const roomId = getComputedStyle(micToggle).getPropertyValue('--vroomid').trim();
         const roomIdNum = Number.parseInt(roomId);
         const storageRoom = storage.rooms[pageElements.getRoomHostId(roomIdNum)];
         if (storageRoom) {
             await roomToggleMic(roomIdNum);
+            storageRoom.microphone = !storageRoom.microphone;
         }
+        storageController.save(storage);
         return;
     }
     const closeRoomButton = (event.target as HTMLButtonElement).closest('button.closeRoomButton');

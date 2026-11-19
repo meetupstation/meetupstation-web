@@ -79,7 +79,9 @@ export class Room {
                 if (transceiver.receiver.track.kind === 'video' &&
                     transceiver.sender.track != cameraTrack
                 ) {
-                    await transceiver.sender.replaceTrack(cameraTrack);
+                    try {
+                        await transceiver.sender.replaceTrack(cameraTrack);
+                    } catch (_) {}
                 }
             }
         }
@@ -93,7 +95,9 @@ export class Room {
                 if (transceiver.receiver.track.kind === 'audio' &&
                     transceiver.sender.track != micTrack
                 ) {
-                    await transceiver.sender.replaceTrack(micTrack);
+                    try {
+                        await transceiver.sender.replaceTrack(micTrack);
+                    } catch (_) {}
                 }
             }
         }

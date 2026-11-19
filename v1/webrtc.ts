@@ -70,6 +70,8 @@ export async function meet(
             track.addEventListener('unmute', async () => {
                 if (track.kind === 'video') {
                     await pageElements.mediaPlayVideo(room.id, peerConnectionId, stream.id);
+                } else if (track.kind === 'audio') {
+                    await pageElements.mediaToggleAudio(room.id, peerConnectionId, stream.id);
                 }
             });
 
@@ -102,8 +104,8 @@ export async function meet(
 
         if (await room.waitForIceConnected(peer.peerConnection)) {
             pageElements.setPeerProgress(room.id, peerConnectionId, 4);
-            room.setCameraTrack(room.cameraTrack);
-            room.setMicTrack(room.micTrack);
+            await room.setCameraTrack(room.cameraTrack);
+            await room.setMicTrack(room.micTrack);
         }
 
         if (room.interruptMeet) {
@@ -148,7 +150,7 @@ export async function startCamera(roomId: number,
     const cameraTrack = cameraTracks[room!.nextCameraTrackIndex];
     room!.nextCameraTrackIndex = (room!.nextCameraTrackIndex + 1) % cameraTracks.length;
 
-    room!.setCameraTrack(cameraTrack);
+    await room!.setCameraTrack(cameraTrack);
 }
 
 export async function stopCamera(roomId: number,
@@ -159,7 +161,7 @@ export async function stopCamera(roomId: number,
         return;
     }
 
-    room!.setCameraTrack(null);
+    await room!.setCameraTrack(null);
 }
 
 export async function startMic(roomId: number,
@@ -172,7 +174,7 @@ export async function startMic(roomId: number,
 
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const micTrack = stream.getAudioTracks()[0];
-    room!.setMicTrack(micTrack);
+    await room!.setMicTrack(micTrack);
 }
 
 export async function stopMic(roomId: number,
@@ -183,7 +185,7 @@ export async function stopMic(roomId: number,
         return;
     }
 
-    room!.setMicTrack(null);
+    await room!.setMicTrack(null);
 }
 
 export function closePeer(roomId: number,

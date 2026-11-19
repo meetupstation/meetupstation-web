@@ -189,7 +189,7 @@ document.addEventListener('click', async (event) => {
 
         const streamId = getComputedStyle(audioToggle).getPropertyValue('--vstreamid').trim();
 
-        await pageElements.mediaToggleAudio(roomIdNum, peerConnectionIdNum, streamId, audioToggle);
+        await pageElements.mediaToggleAudio(roomIdNum, peerConnectionIdNum, streamId);
         return;
     }
     const videoPlayButton = (event.target as HTMLButtonElement).closest('button.videoPlayButton') as HTMLButtonElement;
@@ -212,5 +212,5 @@ storageController.save(storage);
 
 for (const room in storage.rooms) {
     pageElements.setHostId(room);
-    await newRoom(rooms);
+    newRoom(rooms); // don't await, let continue to next rooms if any
 }

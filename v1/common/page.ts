@@ -287,8 +287,7 @@ export function closeMediaStreams(roomId: number, peerConnectionId: number) {
 export async function mediaToggleAudio(
     roomId: number,
     peerConnectionId: number,
-    streamId: string,
-    self: HTMLInputElement) {
+    streamId: string) {
     try {
         const roomDivs = document.querySelectorAll<HTMLDivElement>('div.media');
         const roomDiv = [...roomDivs].find(
@@ -304,11 +303,12 @@ export async function mediaToggleAudio(
 
         const audioElement = peerMedia.querySelector<HTMLAudioElement>('audio')!;
 
-        audioElement.muted = !self.checked;
+        const unmuteAudioInput = peerMedia.querySelector<HTMLInputElement>('input')!;
+
+        audioElement.muted = !unmuteAudioInput.checked;
     } catch (error) {
         const message = String(error);
         setErrorMessage(roomId, message);
-        self.checked = !self.checked;
     }
 }
 

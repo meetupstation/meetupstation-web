@@ -123,7 +123,7 @@ export class Room {
             })(this.meetingType);
 
         if (this.meetingType === signalling.MeetingType.HOST) {
-
+            await this.setupTracksAndDataHandlers(peerConnection);
             await this.signalling.hostPost();
 
             const offer = await peerConnection.createOffer();

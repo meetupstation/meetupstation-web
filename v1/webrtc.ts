@@ -90,7 +90,7 @@ export async function meet(
         await room.ifHostPrepareOffer(peer.peerConnection);
 
         const storage = storageController.load();
-        if (storage.rooms[room.signalling.id] === undefined) {
+        if (!storage.rooms[room.signalling.id]) {
             storage.rooms[room.signalling.id] = {
                 camera: room.cameraTrack != null,
                 microphone: room.micTrack != null

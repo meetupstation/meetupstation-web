@@ -284,10 +284,11 @@ export function closeMediaStreams(roomId: number, peerConnectionId: number) {
     }
 }
 
-export async function mediaToggleAudio(
+async function mediaToggleAudioHelper(
     roomId: number,
     peerConnectionId: number,
-    streamId: string) {
+    streamId: string,
+    forceUnmute: boolean) {
     try {
         const roomDivs = document.querySelectorAll<HTMLDivElement>('div.media');
         const roomDiv = [...roomDivs].find(
@@ -305,11 +306,29 @@ export async function mediaToggleAudio(
 
         const unmuteAudioInput = peerMedia.querySelector<HTMLInputElement>('input')!;
 
+        if (forceUnmute) {
+            unmuteAudioInput.checked = true;
+        }
+
         audioElement.muted = !unmuteAudioInput.checked;
     } catch (error) {
         const message = String(error);
         setErrorMessage(roomId, message);
     }
+}
+
+export async function mediaToggleAudio(
+    roomId: number,
+    peerConnectionId: number,
+    streamId: string) {
+    await mediaToggleAudioHelper(roomId, peerConnectionId, streamId, false);
+}
+
+export async function mediaUnmuteAudio(
+    roomId: number,
+    peerConnectionId: number,
+    streamId: string) {
+    await mediaToggleAudioHelper(roomId, peerConnectionId, streamId, true);
 }
 
 export async function mediaPlayVideo(

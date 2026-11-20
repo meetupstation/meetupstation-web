@@ -20,7 +20,7 @@ export class Room {
     peers: Map<number, Peer> = new Map();
     _peerConnectionId: number = 1;
 
-    nextCameraTrackIndex: number = 0;
+    cameraDeviceId: string = '';
     cameraTrack: MediaStreamTrack | null = null;
     micTrack: MediaStreamTrack | null = null;
 

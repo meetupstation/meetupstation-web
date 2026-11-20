@@ -133,18 +133,42 @@ export function interruptMeetReset(
     return result;
 }
 
+async function listCameras(): Promise<MediaDeviceInfo[]> {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    // ids are empty strings until camera permission has been granted
+    return devices.filter(d => d.kind === 'videoinput' && d.deviceId);
+}
+
 export async function startCamera(roomId: number,
     rooms: Map<string, webrtcElements.Room>) {
 
     const room = rooms.get(`${roomId}`);
-    if (room === null) {
+    if (!room) {
         return;
     }
 
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    const cameraTracks = stream.getVideoTracks();
-    const cameraTrack = cameraTracks[room!.nextCameraTrackIndex];
-    room!.nextCameraTrackIndex = (room!.nextCameraTrackIndex + 1) % cameraTracks.length;
+    room.cameraTrack?.stop();
+
+    const cameras = await listCameras();
+
+    const stream = await (async () => {
+        if (cameras.length === 0) {
+            return await navigator.mediaDevices.getUserMedia({
+                video: true
+            });
+        } else {
+            const last = cameras.findIndex((item) => {
+                return item.deviceId === room.cameraDeviceId;
+            });
+            const next = cameras[(last + 1) % cameras.length];
+            return await navigator.mediaDevices.getUserMedia({
+                video: { deviceId: { exact: next.deviceId } }
+            });
+        }
+    })();
+
+    const cameraTrack = stream.getVideoTracks()[0];
+    room.cameraDeviceId = cameraTrack.getSettings().deviceId ?? '';
 
     await room!.setCameraTrack(cameraTrack);
 }
@@ -153,9 +177,11 @@ export async function stopCamera(roomId: number,
     rooms: Map<string, webrtcElements.Room>) {
 
     const room = rooms.get(`${roomId}`);
-    if (room === null) {
+    if (!room) {
         return;
     }
+
+    room.cameraTrack?.stop();
 
     await room!.setCameraTrack(null);
 }
@@ -164,9 +190,11 @@ export async function startMic(roomId: number,
     rooms: Map<string, webrtcElements.Room>) {
 
     const room = rooms.get(`${roomId}`);
-    if (room === null) {
+    if (!room) {
         return;
     }
+
+    room.micTrack?.stop();
 
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const micTrack = stream.getAudioTracks()[0];
@@ -177,11 +205,13 @@ export async function stopMic(roomId: number,
     rooms: Map<string, webrtcElements.Room>) {
 
     const room = rooms.get(`${roomId}`);
-    if (room === null) {
+    if (!room) {
         return;
     }
 
-    await room!.setMicTrack(null);
+    room.micTrack?.stop();
+
+    await room.setMicTrack(null);
 }
 
 export function closePeer(roomId: number,

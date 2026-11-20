@@ -319,15 +319,17 @@ export async function mediaPlayVideo(
 
         const playVideoButton = peerMedia.querySelector<HTMLButtonElement>('button')!;
         const unmuteAudioInput = peerMedia.querySelector<HTMLInputElement>('input')!;
-        unmuteAudioInput.checked = true;
-        videoElement.muted = !unmuteAudioInput.checked;
-        playVideoButton.disabled = true;
 
         try {
+            await videoElement.play();
+            unmuteAudioInput.checked = true;
+            videoElement.muted = !unmuteAudioInput.checked;
+            playVideoButton.disabled = true;
             await videoElement.play();
         } catch (_) {
             unmuteAudioInput.checked = !videoElement.muted;
             playVideoButton.disabled = false;
+            videoElement.pause();
         }
 
     } catch (error) {

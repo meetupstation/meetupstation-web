@@ -320,11 +320,16 @@ export async function mediaPlayVideo(
         const playVideoButton = peerMedia.querySelector<HTMLButtonElement>('button')!;
         const unmuteAudioInput = peerMedia.querySelector<HTMLInputElement>('input')!;
         unmuteAudioInput.checked = true;
-
-        await videoElement.play();
         videoElement.muted = !unmuteAudioInput.checked;
-
         playVideoButton.disabled = true;
+
+        try {
+            await videoElement.play();
+        } catch (_) {
+            unmuteAudioInput.checked = !videoElement.muted;
+            playVideoButton.disabled = false;
+        }
+
     } catch (error) {
         const message = String(error);
         setErrorMessage(roomId, message);

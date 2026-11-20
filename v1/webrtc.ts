@@ -69,7 +69,6 @@ export async function meet(
 
             track.addEventListener('unmute', async () => {
                 await pageElements.mediaPlayVideo(room.id, peerConnectionId, stream.id);
-                await pageElements.mediaToggleAudio(room.id, peerConnectionId, stream.id);
             });
 
         // track.addEventListener('unmute', () =>

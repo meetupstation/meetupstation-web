@@ -204,7 +204,7 @@ export class SignallingScope {
                     if (!mapKindCounter[transceiver.receiver.track.kind]) {
                         mapKindCounter[transceiver.receiver.track.kind] = {
                             count: 1
-                        }
+                        };
                     } else {
                         continue;
                     }

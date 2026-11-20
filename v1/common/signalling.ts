@@ -194,7 +194,20 @@ export class SignallingScope {
                 );
 
                 const localStream = new MediaStream();
+                const mapKindCounter : {
+                    [kind: string]: {
+                        count: number
+                    }
+                } = Object.create(null);
+
                 for (const transceiver of peerConnection.getTransceivers()) {
+                    if (!mapKindCounter[transceiver.receiver.track.kind]) {
+                        mapKindCounter[transceiver.receiver.track.kind] = {
+                            count: 1
+                        }
+                    } else {
+                        continue;
+                    }
                     transceiver.direction = 'sendrecv';
                     transceiver.sender.setStreams(localStream);
                 }
